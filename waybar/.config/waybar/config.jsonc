@@ -18,6 +18,7 @@
         "pulseaudio",
         "backlight",
         "battery",
+        "custom/power-profile",
         "cpu",
         "memory",
         "tray"
@@ -80,6 +81,18 @@
             "󰂂",
             "󰁹"
         ]
+    },
+
+    "custom/power-profile": {
+        "exec": "$HOME/.config/quickshell/r41n/scripts/.local/bin/power-profile-status",
+        "return-type": "json",
+        "interval": 5,
+        "on-click": "$HOME/.config/quickshell/r41n/scripts/.local/bin/power-profile-cycle",
+        "on-click-middle": "powerprofilesctl set balanced",
+        "on-click-right": "powerprofilesctl set power-saver",
+        "on-scroll-up": "powerprofilesctl set performance",
+        "on-scroll-down": "powerprofilesctl set power-saver",
+        "tooltip": true
     },
 
     "cpu": {

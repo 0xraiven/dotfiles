@@ -2,7 +2,7 @@ import QtQuick
 import Quickshell
 import Quickshell.Io
 import Quickshell.Wayland
-import Quickshell.Widgets
+import "../r41n/theme/Colors.qml" as Theme
 
 PanelWindow {
     id: root
@@ -29,6 +29,8 @@ PanelWindow {
     property string activeMode: "search"
     property string calculation: ""
     property bool resultsVisible: searchInput.text.trim().length > 0
+
+    Theme.Colors { id: colors }
 
     function loadResults(raw) {
         try {
@@ -89,13 +91,13 @@ PanelWindow {
         else if (item.kind === "app") Quickshell.execDetached(["gtk-launch", item.id])
         else if (item.kind === "file") Quickshell.execDetached(["xdg-open", item.id])
         else if (item.kind === "command") Quickshell.execDetached(["sh", "-lc", item.id])
-        else if (item.kind === "clipboard") Quickshell.execDetached(["sh", "-lc", "$HOME/.local/bin/clipboard-restore " + item.id])
+        else if (item.kind === "clipboard") Quickshell.execDetached(["sh", "-lc", "$HOME/.config/quickshell/r41n/scripts/.local/bin/clipboard-restore " + item.id])
         Qt.quit()
     }
 
     Process {
         id: loader
-        command: ["sh", "-lc", "$HOME/.local/bin/spotlight-items"]
+        command: ["sh", "-lc", "$HOME/.config/quickshell/r41n/scripts/.local/bin/spotlight-items"]
         running: true
         stdout: StdioCollector { id: output }
         onExited: root.loadResults(output.text)
@@ -103,7 +105,7 @@ PanelWindow {
 
     Process {
         id: clipboardLoader
-        command: ["sh", "-lc", "$HOME/.local/bin/clipboard-items"]
+        command: ["sh", "-lc", "$HOME/.config/quickshell/r41n/scripts/.local/bin/clipboard-items"]
         stdout: StdioCollector { id: clipboardOutput }
         onExited: root.loadClipboard(clipboardOutput.text)
     }
@@ -128,9 +130,9 @@ PanelWindow {
         anchors.horizontalCenter: parent.horizontalCenter
         anchors.top: parent.top
         radius: 19
-        color: "#eb1b1e27"
+        color: Qt.rgba(colors.surface.r, colors.surface.g, colors.surface.b, 0.94)
         border.width: 1
-        border.color: searchInput.activeFocus ? "#8899a6bc" : "#52697588"
+        border.color: searchInput.activeFocus ? colors.primary : colors.outline
         scale: 0.97
         opacity: 0
 
@@ -147,22 +149,13 @@ PanelWindow {
         }
 
         Rectangle {
-            anchors.fill: parent
-            anchors.margins: 1
-            radius: 18
-            color: "transparent"
-            border.width: 1
-            border.color: "#18ffffff"
-        }
-
-        Rectangle {
             id: searchBar
             x: 7
             y: 7
             width: parent.width - 14
             height: 58
             radius: 14
-            color: "#b613161e"
+            color: Qt.rgba(colors.surfaceVariant.r, colors.surfaceVariant.g, colors.surfaceVariant.b, 0.42)
             border.width: 1
             border.color: searchInput.activeFocus ? "#9aa9bccc" : "#43526070"
 
@@ -171,7 +164,7 @@ PanelWindow {
                 anchors.leftMargin: 18
                 anchors.verticalCenter: parent.verticalCenter
                 text: "⌕"
-                color: "#e4e9f0"
+                color: colors.foreground
                 font.pixelSize: 26
             }
 
@@ -204,7 +197,7 @@ PanelWindow {
                 anchors.leftMargin: 56
                 anchors.verticalCenter: parent.verticalCenter
                 text: "Search"
-                color: "#929ca8"
+                color: colors.muted
                 font.pixelSize: 17
             }
         }
@@ -241,9 +234,8 @@ PanelWindow {
                 width: resultList.width
                 height: model.kind === "clipboard" && model.isImage ? 174 : 48
                 radius: 11
-                color: ListView.isCurrentItem ? "#3c4b5b6d" : (resultMouse.containsMouse ? "#2b343e4b" : "#141c222b")
-                border.width: 1
-                border.color: ListView.isCurrentItem ? "#71889bb0" : "#182f3a48"
+                color: ListView.isCurrentItem ? Qt.rgba(colors.primary.r, colors.primary.g, colors.primary.b, 0.28) : (resultMouse.containsMouse ? Qt.rgba(colors.surfaceVariant.r, colors.surfaceVariant.g, colors.surfaceVariant.b, 0.32) : Qt.rgba(colors.surface.r, colors.surface.g, colors.surface.b, 0.28))
+                border.width: 0
                 opacity: 0
 
                 Component.onCompleted: rowAnimation.start()
@@ -256,32 +248,28 @@ PanelWindow {
 
                 Behavior on color { ColorAnimation { duration: 120; easing.type: Easing.OutCubic } }
 
-                Text {
+                Rectangle {
+                    width: 70
+                    height: 22
+                    radius: 7
                     anchors.left: parent.left
-                    anchors.leftMargin: 15
+                    anchors.leftMargin: 12
                     anchors.top: parent.top
                     anchors.topMargin: 9
-                    text: model.kind === "run" ? "Run" : (model.kind === "file" ? "File" : (model.kind === "clipboard" ? "Clipboard" : ""))
-                    color: "#9ca9b7"
-                    font.pixelSize: 10
-                    font.weight: Font.DemiBold
-                }
+                    color: ListView.isCurrentItem ? Qt.rgba(colors.primary.r, colors.primary.g, colors.primary.b, 0.42) : Qt.rgba(colors.surfaceVariant.r, colors.surfaceVariant.g, colors.surfaceVariant.b, 0.35)
 
-                IconImage {
-                    visible: model.kind === "app" && model.icon !== ""
-                    width: 28
-                    height: 28
-                    anchors.left: parent.left
-                    anchors.leftMargin: 43
-                    anchors.top: parent.top
-                    anchors.topMargin: 10
-                    source: model.icon ? (model.icon.charAt(0) === "/" ? "file://" + model.icon : Quickshell.iconPath(model.icon, true)) : ""
-                    asynchronous: true
+                    Text {
+                        anchors.centerIn: parent
+                        text: model.kind === "run" ? "RUN" : (model.kind === "app" ? "APP" : (model.kind === "file" ? "FILE" : (model.kind === "command" ? "CMD" : "CLIPBOARD")))
+                        color: colors.foreground
+                        font.pixelSize: 9
+                        font.weight: Font.DemiBold
+                    }
                 }
 
                 Column {
                     anchors.left: parent.left
-                    anchors.leftMargin: 82
+                    anchors.leftMargin: 96
                     anchors.right: parent.right
                     anchors.rightMargin: 16
                     anchors.top: parent.top
@@ -291,7 +279,7 @@ PanelWindow {
                     Text {
                         width: parent.width
                         text: model.kind === "clipboard" && model.isImage ? "BINARY DATA  ·  " + model.mime : model.name
-                        color: "#f1f4f7"
+                        color: Colors.foreground
                         font.pixelSize: 13
                         elide: Text.ElideRight
                     }
@@ -299,7 +287,7 @@ PanelWindow {
                     Text {
                         width: parent.width
                         text: model.kind === "clipboard" ? model.label : model.subtitle
-                        color: "#96a2af"
+                        color: colors.muted
                         font.pixelSize: 10
                         elide: Text.ElideRight
                     }

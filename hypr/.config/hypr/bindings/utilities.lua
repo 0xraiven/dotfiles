@@ -1,5 +1,5 @@
-hl.bind("PRINT", hl.dsp.exec_cmd("$HOME/.local/bin/screenshot region"))
-hl.bind("SHIFT + PRINT", hl.dsp.exec_cmd("$HOME/.local/bin/screenshot full"))
+hl.bind("PRINT", hl.dsp.exec_cmd("$HOME/.config/quickshell/r41n/scripts/.local/bin/screenshot region"))
+hl.bind("SHIFT + PRINT", hl.dsp.exec_cmd("$HOME/.config/quickshell/r41n/scripts/.local/bin/screenshot full"))
 hl.bind("SUPER + L", hl.dsp.exec_cmd("loginctl lock-session"))
 hl.bind("XF86AudioRaiseVolume", hl.dsp.exec_cmd("wpctl set-volume -l 1.0 @DEFAULT_AUDIO_SINK@ 5%+"))
 hl.bind("XF86AudioLowerVolume", hl.dsp.exec_cmd("wpctl set-volume @DEFAULT_AUDIO_SINK@ 5%-"))

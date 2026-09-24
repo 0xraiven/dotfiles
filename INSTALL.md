@@ -64,30 +64,34 @@ This repository is the primary source of truth for the current Linux desktop env
 │       └── matugen/
 │           ├── config.toml
 │           └── templates/
+│               ├── hyprland-colors.lua
+│               ├── quickshell-colors.qml
 │               └── waybar-colors.css
+- Matugen also updates the shared Quickshell theme at `~/.config/quickshell/r41n/theme/Colors.qml` and Hyprland theme values at `~/.config/hypr/config/colors.lua`.
 ├── quickshell/
 │   └── .config/
 │       └── quickshell/
 │           ├── launcher/
 │           │   └── shell.qml
+│           ├── clipboard/
+│           │   └── shell.qml
 │           └── rice/
 │               └── shell.qml
-│           └── clipboard/
-│               └── shell.qml
-├── quickshell/
 │   └── r41n/
 │       └── scripts/
 │           └── .local/
 │               └── bin/
-│           ├── apply-palette
-│           ├── clipboard-items
-│           ├── clipboard-history
-│           ├── clipboard-restore
-│           ├── clipboard-start
-│           ├── screenshot
-│           ├── waybar-start
-│           ├── wallpaper-next
-│           └── wallpaper-random
+│                   ├── apply-palette
+│                   ├── clipboard-items
+│                   ├── clipboard-history
+│                   ├── clipboard-restore
+│                   ├── clipboard-start
+│                   ├── launcher-items
+│                   ├── screenshot
+│                   ├── spotlight-items
+│                   ├── waybar-start
+│                   ├── wallpaper-next
+│                   └── wallpaper-random
 ├── waybar/
 │   └── .config/
 │       └── waybar/
@@ -132,3 +136,4 @@ The generated `colors.css` is runtime output and is intentionally not stored in 
 - Print and Shift+Print save screenshots to Pictures and copy them into the image clipboard history.
 - The Super key opens the unified Quickshell Spotlight surface below Waybar with a translucent Material glass panel and fluid entry animation. Plain text searches apps and files; mathematical expressions show Qalc results; `:` searches clipboard history; `>` filters runnable environment commands; any raw query also exposes a Run command action.
 - Use Up/Down to select a result, Enter to launch or run it, and Escape to close Spotlight.
+- Waybar shows the active power profile. Left-click cycles profiles, middle-click selects balanced, right-click selects power saver, scroll up selects performance, and scroll down selects power saver.

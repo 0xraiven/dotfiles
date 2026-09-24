@@ -1,3 +1,5 @@
+local colors = require("config.colors")
+
 hl.config({
     general = {
         gaps_in = 6,
@@ -7,8 +9,8 @@ hl.config({
         resize_on_border = true,
         allow_tearing = false,
         col = {
-            active_border = "0xff89b4faff",
-            inactive_border = "0xff45475aff",
+            active_border = "0xff" .. colors.primary:sub(2) .. "ff",
+            inactive_border = "0xff" .. colors.surface_variant:sub(2) .. "ff",
         },
     },
 
@@ -58,7 +60,7 @@ hl.config({
         disable_hyprland_logo = true,
         disable_splash_rendering = true,
         force_default_wallpaper = 0,
-        disable_autoreload = false,
+        disable_autoreload = true,
         animate_manual_resizes = true,
         animate_mouse_windowdragging = true,
     },

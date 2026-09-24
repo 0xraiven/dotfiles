@@ -1,0 +1,18 @@
+# Backups and temporary files
+.dotfiles-backups/
+*.bak
+*.swp
+*.swo
+*~
+*.log
+
+# Caches and runtime state
+.cache/
+__pycache__/
+*.pyc
+
+# OS and editor metadata
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/

@@ -1,0 +1,15 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+profiles=(power-saver balanced performance)
+current="$(powerprofilesctl get 2>/dev/null || true)"
+next_index=0
+
+for index in "${!profiles[@]}"; do
+  if [ "${profiles[$index]}" = "$current" ]; then
+    next_index=$(( (index + 1) % ${#profiles[@]} ))
+    break
+  fi
+done
+
+powerprofilesctl set "${profiles[$next_index]}"

@@ -85,6 +85,23 @@ window#waybar {
     color: @tertiary;
 }
 
+#custom-power-profile {
+    color: @primary;
+    padding: 0 9px;
+}
+
+#custom-power-profile.power-saver {
+    color: @tertiary;
+}
+
+#custom-power-profile.balanced {
+    color: @secondary;
+}
+
+#custom-power-profile.performance {
+    color: @error;
+}
+
 #battery {
     color: @primary;
 }

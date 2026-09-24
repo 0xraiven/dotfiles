@@ -238,6 +238,7 @@ install_repo() {
 
     if [ -d "$REPO_DIR/quickshell/.config/quickshell" ]; then
       copy_tree "$REPO_DIR/quickshell/.config/quickshell" "$HOME_DIR/.config/quickshell"
+      remove_if_exists "$HOME_DIR/.config/quickshell/power"
     fi
 
     if [ -d "$REPO_DIR/matugen/.config/matugen" ]; then
@@ -246,6 +247,7 @@ install_repo() {
 
     if [ -d "$REPO_DIR/quickshell/r41n/scripts/.local/bin" ]; then
       copy_tree "$REPO_DIR/quickshell/r41n/scripts" "$SCRIPT_TARGET"
+      remove_if_exists "$SCRIPT_TARGET/.local/bin/clipboard-history"
       remove_legacy_scripts
     fi
 

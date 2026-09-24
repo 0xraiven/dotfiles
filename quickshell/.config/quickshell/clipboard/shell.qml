@@ -2,6 +2,7 @@ import QtQuick
 import Quickshell
 import Quickshell.Io
 import Quickshell.Wayland
+import "../r41n/theme/Colors.qml" as Theme
 
 PanelWindow {
     id: root
@@ -26,6 +27,8 @@ PanelWindow {
 
     property var entries: []
 
+    Theme.Colors { id: colors }
+
     function loadEntries(raw) {
         try {
             entries = JSON.parse(raw)
@@ -39,13 +42,13 @@ PanelWindow {
     }
 
     function restore(entryId) {
-        Quickshell.execDetached(["sh", "-lc", "$HOME/.local/bin/clipboard-restore " + entryId])
+        Quickshell.execDetached(["sh", "-lc", "$HOME/.config/quickshell/r41n/scripts/.local/bin/clipboard-restore " + entryId])
         Qt.quit()
     }
 
     Process {
         id: loader
-        command: ["sh", "-lc", "$HOME/.local/bin/clipboard-items"]
+        command: ["sh", "-lc", "$HOME/.config/quickshell/r41n/scripts/.local/bin/clipboard-items"]
         running: true
         stdout: StdioCollector {
             id: output
@@ -59,10 +62,10 @@ PanelWindow {
 
     Rectangle {
         anchors.fill: parent
-        color: "#17191f"
+        color: Qt.rgba(colors.surface.r, colors.surface.g, colors.surface.b, 0.94)
         radius: 12
         border.width: 1
-        border.color: "#343943"
+        border.color: colors.outline
 
         Column {
             anchors.fill: parent

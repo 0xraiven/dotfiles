@@ -1,0 +1,30 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+profile="$(powerprofilesctl get 2>/dev/null || true)"
+
+case "$profile" in
+  performance)
+    text="󰓅 Performance"
+    tooltip="Performance power profile"
+    ;;
+  balanced)
+    text="󰾅 Balanced"
+    tooltip="Balanced power profile"
+    ;;
+  power-saver)
+    text="󰾆 Power saver"
+    tooltip="Power saver profile"
+    ;;
+  *)
+    text="󰚥 Power"
+    tooltip="Power profile unavailable"
+    profile="unknown"
+    ;;
+esac
+
+jq -cn \
+  --arg text "$text" \
+  --arg tooltip "$tooltip" \
+  --arg profile "$profile" \
+  '{text: $text, tooltip: $tooltip, class: $profile}'
