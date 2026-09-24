@@ -1,0 +1,15 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+LOCK_FILE="${XDG_RUNTIME_DIR:-/tmp}/dotfiles-cliphist.lock"
+
+exec flock --nonblock "$LOCK_FILE" sh -c '
+    wl-paste --type text --watch cliphist store &
+    text_pid=$!
+    wl-paste --type image/png --watch cliphist store &
+    png_pid=$!
+    wl-paste --type image/jpeg --watch cliphist store &
+    jpeg_pid=$!
+    trap "kill $text_pid $png_pid $jpeg_pid 2>/dev/null || true" EXIT INT TERM
+    wait -n "$text_pid" "$png_pid" "$jpeg_pid"
+'

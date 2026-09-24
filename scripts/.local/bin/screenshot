@@ -1,0 +1,27 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+mode="${1:-region}"
+pictures_dir="$(xdg-user-dir PICTURES)"
+timestamp="$(date +%Y%m%d-%H%M%S)"
+output_file="$pictures_dir/screenshot-$timestamp.png"
+
+mkdir -p "$pictures_dir"
+
+case "$mode" in
+  region)
+    geometry="$(slurp)"
+    [ -n "$geometry" ] || exit 0
+    grim -g "$geometry" "$output_file"
+    ;;
+  full)
+    grim "$output_file"
+    ;;
+  *)
+    echo "Usage: screenshot [region|full]" >&2
+    exit 2
+    ;;
+esac
+
+wl-copy --type image/png < "$output_file"
+printf '%s\n' "$output_file"

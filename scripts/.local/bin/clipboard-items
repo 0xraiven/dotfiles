@@ -1,0 +1,32 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+CACHE_DIR="${XDG_CACHE_HOME:-${HOME}/.cache}/dotfiles/cliphist"
+mkdir -p "$CACHE_DIR"
+
+cliphist list | head -40 | while IFS=$'\t' read -r entry_id label; do
+  [ -n "$entry_id" ] || continue
+
+  entry_file="$(mktemp)"
+  printf '%s\t%s\n' "$entry_id" "$label" | cliphist decode > "$entry_file"
+  mime_type="$(file --brief --mime-type "$entry_file")"
+  preview=""
+
+  case "$mime_type" in
+    image/png|image/jpeg|image/webp)
+      extension="${mime_type#image/}"
+      preview_file="$CACHE_DIR/$entry_id.$extension"
+      cp "$entry_file" "$preview_file"
+      preview="file://$preview_file"
+      ;;
+  esac
+
+  jq -cn \
+    --arg id "$entry_id" \
+    --arg label "$label" \
+    --arg mime "$mime_type" \
+    --arg preview "$preview" \
+    '{id: $id, label: $label, mime: $mime, preview: $preview, isImage: ($mime | startswith("image/"))}'
+
+  rm -f "$entry_file"
+done | jq -s .

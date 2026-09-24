@@ -70,10 +70,17 @@ This repository is the primary source of truth for the current Linux desktop env
 │       └── quickshell/
 │           └── rice/
 │               └── shell.qml
+│           └── clipboard/
+│               └── shell.qml
 ├── scripts/
 │   └── .local/
 │       └── bin/
 │           ├── apply-palette
+│           ├── clipboard-items
+│           ├── clipboard-history
+│           ├── clipboard-restore
+│           ├── clipboard-start
+│           ├── screenshot
 │           ├── waybar-start
 │           ├── wallpaper-next
 │           └── wallpaper-random
@@ -116,3 +123,6 @@ The generated `colors.css` is runtime output and is intentionally not stored in 
 - Quickshell owns wallpaper selection and rotation; hyprpaper remains the renderer.
 - Run wallpaper-next or wallpaper-random manually to change the current wallpaper.
 - Matugen generates Waybar colors from every selected wallpaper and refreshes Waybar automatically.
+- Cliphist stores text and image clipboard entries. `Super+V` opens the Quickshell Material-style picker and restores the selected entry.
+- Image entries are labeled as binary data and show a thumbnail directly below the metadata.
+- Print and Shift+Print save screenshots to Pictures and copy them into the image clipboard history.
