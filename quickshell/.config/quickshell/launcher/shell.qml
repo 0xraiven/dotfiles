@@ -239,7 +239,7 @@ PanelWindow {
                 Text {
                     id: modeText
                     anchors.centerIn: parent
-                    text: root.activeMode === "clipboard" ? "Clipboard" : "Terminal"
+                    text: root.activeMode === "clipboard" ? "Clipboard" : "Controls"
                     color: colors.primary
                     font.pixelSize: 11
                     font.weight: Font.DemiBold
@@ -282,7 +282,7 @@ PanelWindow {
                 anchors.left: modeBadge.visible ? modeBadge.right : searchIcon.right
                 anchors.leftMargin: 12
                 anchors.verticalCenter: parent.verticalCenter
-                text: root.activeMode === "clipboard" ? "Search clipboard history..." : (root.activeMode === "commands" ? "Run command..." : "Spotlight Search")
+                text: root.activeMode === "clipboard" ? "Search clipboard history..." : (root.activeMode === "commands" ? "Search controls & commands..." : "Spotlight Search")
                 color: colors.muted
                 font.pixelSize: 20
                 font.weight: Font.Normal
@@ -491,7 +491,7 @@ PanelWindow {
                             Text {
                                 id: actionPillText
                                 anchors.centerIn: parent
-                                text: model.kind === "run" ? "↩ Run" : (model.kind === "app" ? "↩ Open" : (model.kind === "file" ? "↩ Open" : "↩ Run"))
+                                text: model.kind === "run" ? "↩ Run" : (model.kind === "app" ? "↩ Open" : (model.kind === "file" ? "↩ Open" : (model.kind === "command" ? "↩ Run" : "↩ Select")))
                                 color: colors.foreground
                                 font.pixelSize: 10
                                 font.weight: Font.DemiBold

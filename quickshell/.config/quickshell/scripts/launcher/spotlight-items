@@ -10,9 +10,96 @@ trap cleanup EXIT
 SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 "$SCRIPT_DIR/launcher-items" > "$work_dir/apps.json"
 
-bash -lc 'compgen -c | sort -u' | \
-  jq -Rsc 'split("\n") | map(select(length > 0) | {id: ., name: ., subtitle: "Environment command", kind: "command"}) | .[0:600]' \
-  > "$work_dir/commands.json"
+# Build ONLY custom environment commands & desktop controls
+python3 -c "
+import json, os, glob
+
+wallpapers_dir = os.path.expanduser('~/.config/hypr/wallpapers')
+wp_scripts = os.path.expanduser('~/.config/quickshell/scripts/wallpaper')
+sys_scripts = os.path.expanduser('~/.config/quickshell/scripts/system')
+
+cmds = [
+    {
+        'id': f'{wp_scripts}/wallpaper-picker',
+        'name': 'Wallpaper Picker',
+        'subtitle': 'Open wallpaper gallery selector UI',
+        'kind': 'command'
+    },
+    {
+        'id': f'{wp_scripts}/wallpaper-next',
+        'name': 'Next Wallpaper',
+        'subtitle': 'Cycle to next wallpaper & update theme',
+        'kind': 'command'
+    },
+    {
+        'id': f'{wp_scripts}/wallpaper-random',
+        'name': 'Random Wallpaper',
+        'subtitle': 'Select random wallpaper & update theme',
+        'kind': 'command'
+    },
+]
+
+# Custom desktop controls
+cmds.extend([
+    {
+        'id': f'{sys_scripts}/screenshot region',
+        'name': 'Screenshot (Select Region)',
+        'subtitle': 'Save cropped screenshot to Pictures & clipboard',
+        'kind': 'command'
+    },
+    {
+        'id': f'{sys_scripts}/screenshot full',
+        'name': 'Screenshot (Full Screen)',
+        'subtitle': 'Save full desktop capture to Pictures & clipboard',
+        'kind': 'command'
+    },
+    {
+        'id': 'hyprctl reload',
+        'name': 'Reload Hyprland',
+        'subtitle': 'Reload Hyprland window manager configuration',
+        'kind': 'command'
+    },
+    {
+        'id': f'{sys_scripts}/waybar-start',
+        'name': 'Restart Waybar',
+        'subtitle': 'Restart top bar and reload styling',
+        'kind': 'command'
+    },
+    {
+        'id': f'{sys_scripts}/power-profile-cycle',
+        'name': 'Cycle Power Profile',
+        'subtitle': 'Switch Performance / Balanced / Power Saver modes',
+        'kind': 'command'
+    },
+    {
+        'id': 'loginctl lock-session',
+        'name': 'Lock Screen',
+        'subtitle': 'Lock the current desktop session',
+        'kind': 'command'
+    },
+    {
+        'id': 'systemctl suspend',
+        'name': 'Suspend System',
+        'subtitle': 'Put computer into low-power sleep state',
+        'kind': 'command'
+    },
+    {
+        'id': 'systemctl reboot',
+        'name': 'Reboot System',
+        'subtitle': 'Restart the computer',
+        'kind': 'command'
+    },
+    {
+        'id': 'systemctl poweroff',
+        'name': 'Shut Down',
+        'subtitle': 'Safely power off computer',
+        'kind': 'command'
+    }
+])
+
+with open('$work_dir/commands.json', 'w') as f:
+    json.dump(cmds, f)
+"
 
 find "$HOME" \
   -type d \( \

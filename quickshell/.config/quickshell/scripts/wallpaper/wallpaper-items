@@ -1,0 +1,17 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+WALLPAPER_DIR="${WALLPAPER_DIR:-${HOME}/.config/hypr/wallpapers}"
+
+if [ ! -d "$WALLPAPER_DIR" ]; then
+  echo "[]"
+  exit 0
+fi
+
+find "$WALLPAPER_DIR" -maxdepth 1 -type f \( -iname '*.jpg' -o -iname '*.jpeg' -o -iname '*.png' -o -iname '*.webp' \) -print | sort | \
+  jq -Rsc 'split("\n") | map(select(length > 0) | {
+    id: .,
+    path: .,
+    name: (split("/") | last | sub("\\.[^.]+$"; "") | (.[0:1] | ascii_upcase) + .[1:]),
+    filename: (split("/") | last)
+  })'

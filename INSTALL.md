@@ -76,6 +76,9 @@ This repository is the primary source of truth for the current Linux desktop env
 │           │   └── shell.qml
 │           ├── rice/
 │           │   └── shell.qml
+│           ├── wallpaper/
+│           │   ├── Colors.qml
+│           │   └── shell.qml
 │           └── scripts/
 │               ├── clipboard/
 │               │   ├── clipboard-items
@@ -91,8 +94,11 @@ This repository is the primary source of truth for the current Linux desktop env
 │               │   └── waybar-start
 │               └── wallpaper/
 │                   ├── apply-palette
+│                   ├── apply-wallpaper
 │                   ├── hyprpaper-start
+│                   ├── wallpaper-items
 │                   ├── wallpaper-next
+│                   ├── wallpaper-picker
 │                   └── wallpaper-random
 ├── waybar/
 │   └── .config/
@@ -136,6 +142,6 @@ The generated `colors.css` is runtime output and is intentionally not stored in 
 - Cliphist stores text and image clipboard entries. `Super+V` opens the launcher in clipboard mode with the preview pane inspector and restores the selected entry on Return.
 - Image entries are labeled as binary data and show a thumbnail directly below the metadata.
 - Print and Shift+Print save screenshots to Pictures and copy them into the image clipboard history.
-- The Super key opens the unified Quickshell Spotlight surface below Waybar with a translucent Material glass panel and fluid entry animation. Plain text searches apps and files; mathematical expressions show Qalc results; `:` searches clipboard history; `>` filters runnable environment commands; any raw query also exposes a Run command action.
+- The Super key opens the unified Quickshell Spotlight surface below Waybar with a translucent Material glass panel and fluid entry animation. Plain text searches apps and files; mathematical expressions show Qalc results; `:` searches clipboard history; `>` filters custom environment controls (Wallpaper Picker gallery UI, wallpaper switching, screenshot tools, Waybar/Hyprland reloads, and power options); any raw query also exposes a Run command action.
 - Use Up/Down to select a result, Enter to launch or run it, and Escape to close Spotlight.
 - Waybar shows the active power profile. Left-click cycles profiles, middle-click selects balanced, right-click selects power saver, scroll up selects performance, and scroll down selects power saver.

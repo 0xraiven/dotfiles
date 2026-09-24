@@ -1,0 +1,34 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+WALLPAPER="${1:-}"
+if [ -z "$WALLPAPER" ] || [ ! -f "$WALLPAPER" ]; then
+  echo "Usage: apply-wallpaper /path/to/wallpaper" >&2
+  exit 1
+fi
+
+WALLPAPER_DIR="${WALLPAPER_DIR:-${HOME}/.config/hypr/wallpapers}"
+STATE_FILE="${XDG_STATE_HOME:-${HOME}/.local/state}/dotfiles/wallpaper-index"
+SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
+
+# Update state index for seamless continuation with wallpaper-next
+mapfile -t wallpapers < <(find "$WALLPAPER_DIR" -maxdepth 1 -type f \( -iname '*.jpg' -o -iname '*.jpeg' -o -iname '*.png' -o -iname '*.webp' \) -print | sort)
+for i in "${!wallpapers[@]}"; do
+  if [ "${wallpapers[$i]}" = "$WALLPAPER" ]; then
+    mkdir -p "$(dirname "$STATE_FILE")"
+    printf '%s\n' "$i" > "$STATE_FILE"
+    break
+  fi
+done
+
+monitor="$(hyprctl monitors -j | jq -r '.[0].name // empty')"
+if [ -n "$monitor" ]; then
+  for _ in {1..20}; do
+    if hyprctl hyprpaper wallpaper "$monitor,$WALLPAPER" >/dev/null 2>&1; then
+      break
+    fi
+    sleep 0.25
+  done
+fi
+
+"$SCRIPT_DIR/apply-palette" "$WALLPAPER"
