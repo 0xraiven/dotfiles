@@ -18,8 +18,6 @@ PanelWindow {
         right: true
     }
 
-    margins.top: 46
-
     WlrLayershell.layer: WlrLayer.Overlay
     WlrLayershell.keyboardFocus: WlrKeyboardFocus.Exclusive
 
@@ -27,7 +25,9 @@ PanelWindow {
     property var clipboardResults: []
     property string activeMode: "search"
     property string calculation: ""
-    property bool resultsVisible: searchInput.text.trim().length > 0
+    property bool isClipboardMode: activeMode === "clipboard"
+    property bool resultsVisible: searchInput.text.trim().length > 0 || calculation.length > 0
+    property var currentItem: (resultList.currentIndex >= 0 && resultList.currentIndex < resultModel.count) ? resultModel.get(resultList.currentIndex) : null
 
     Colors { id: colors }
 
@@ -58,16 +58,27 @@ PanelWindow {
         resultModel.clear()
 
         if (prefix !== ":" && prefix !== ">" && trimmed.length > 0) {
-            resultModel.append({ id: "__run__", name: trimmed, subtitle: "Run command", kind: "run" })
+            resultModel.append({ id: "__run__", name: trimmed, subtitle: "Run shell command", kind: "run", isImage: false, preview: "" })
         }
 
         for (let index = 0; index < source.length; index++) {
             const item = source[index]
-            const haystack = (item.name + " " + (item.subtitle || "") + " " + (item.label || "")).toLowerCase()
+            const haystack = ((item.name || "") + " " + (item.subtitle || "") + " " + (item.label || "")).toLowerCase()
             if (normalized === "" || haystack.indexOf(normalized) !== -1) {
-                if (prefix !== ">" || item.kind === "command") resultModel.append(item)
+                if (prefix !== ">" || item.kind === "command") {
+                    resultModel.append({
+                        id: String(item.id || ""),
+                        name: String(item.name || ""),
+                        subtitle: String(item.subtitle || item.label || ""),
+                        kind: String(item.kind || "app"),
+                        mime: String(item.mime || ""),
+                        label: String(item.label || item.name || ""),
+                        isImage: Boolean(item.isImage),
+                        preview: String(item.preview || "")
+                    })
+                }
             }
-            if (resultModel.count >= 60) break
+            if (resultModel.count >= 50) break
         }
         resultList.currentIndex = resultModel.count > 0 ? 0 : -1
         updateCalculation(trimmed)
@@ -84,6 +95,12 @@ PanelWindow {
     }
 
     function runCurrent() {
+        if (root.calculation.length > 0 && (resultList.currentIndex < 0 || searchInput.text.trim() === root.calculation)) {
+            Quickshell.execDetached(["sh", "-lc", "printf '%s' '" + root.calculation.replace(/'/g, "'\\''") + "' | wl-copy"])
+            Qt.quit()
+            return
+        }
+
         if (resultList.currentIndex < 0 || resultList.currentIndex >= resultModel.count) return
         const item = resultModel.get(resultList.currentIndex)
         if (item.kind === "run") Quickshell.execDetached(["sh", "-lc", item.name])
@@ -117,72 +134,141 @@ PanelWindow {
 
     ListModel { id: resultModel }
 
-    Rectangle {
+    // Fullscreen scrim: click outside to dismiss
+    MouseArea {
         anchors.fill: parent
-        color: "#3d050609"
+        onClicked: Qt.quit()
     }
 
+    // Spotlight Floating Card
     Rectangle {
         id: spotlight
-        width: 720
-        height: root.resultsVisible ? Math.min(520, 88 + Math.max(1, resultModel.count) * 51 + (root.calculation.length > 0 ? 40 : 0)) : 72
+        width: root.isClipboardMode ? 780 : 660
+        height: {
+            if (!root.resultsVisible) return 66
+            if (root.isClipboardMode) return 490
+            if (resultModel.count > 0) return Math.min(480, 74 + resultModel.count * 50)
+            if (root.calculation.length > 0) return 140
+            return 66
+        }
         anchors.horizontalCenter: parent.horizontalCenter
         anchors.top: parent.top
-        radius: 19
-        color: Qt.rgba(colors.surface.r, colors.surface.g, colors.surface.b, 0.94)
+        anchors.topMargin: Math.round(parent.height * 0.18)
+        radius: 20
+        color: Qt.rgba(colors.surface.r, colors.surface.g, colors.surface.b, 0.92)
         border.width: 1
-        border.color: searchInput.activeFocus ? colors.primary : colors.outline
-        scale: 0.97
+        border.color: searchInput.activeFocus
+            ? Qt.rgba(colors.primary.r, colors.primary.g, colors.primary.b, 0.45)
+            : Qt.rgba(colors.outline.r, colors.outline.g, colors.outline.b, 0.28)
+        clip: true
+        scale: 0.96
         opacity: 0
 
+        // Prevent clicks on spotlight container from closing the window
+        MouseArea {
+            anchors.fill: parent
+            onClicked: {}
+        }
+
+        // Inner top subtle glass reflection
+        Rectangle {
+            anchors.top: parent.top
+            anchors.left: parent.left
+            anchors.right: parent.right
+            height: 1
+            color: Qt.rgba(colors.foreground.r, colors.foreground.g, colors.foreground.b, 0.10)
+        }
+
+        Behavior on width {
+            NumberAnimation { duration: 220; easing.type: Easing.OutQuint }
+        }
+
         Behavior on height {
-            NumberAnimation { duration: 220; easing.type: Easing.OutCubic }
+            NumberAnimation { duration: 240; easing.type: Easing.OutQuint }
+        }
+
+        Behavior on border.color {
+            ColorAnimation { duration: 150 }
         }
 
         Component.onCompleted: entrance.start()
 
         ParallelAnimation {
             id: entrance
-            NumberAnimation { target: spotlight; property: "opacity"; to: 1; duration: 150; easing.type: Easing.OutCubic }
+            NumberAnimation { target: spotlight; property: "opacity"; to: 1; duration: 180; easing.type: Easing.OutCubic }
             NumberAnimation { target: spotlight; property: "scale"; to: 1; duration: 220; easing.type: Easing.OutCubic }
         }
 
-        Rectangle {
+        // Top Search Bar
+        Item {
             id: searchBar
-            x: 7
-            y: 7
-            width: parent.width - 14
-            height: 58
-            radius: 14
-            color: Qt.rgba(colors.surfaceVariant.r, colors.surfaceVariant.g, colors.surfaceVariant.b, 0.42)
-            border.width: 1
-            border.color: searchInput.activeFocus ? "#9aa9bccc" : "#43526070"
+            anchors.top: parent.top
+            anchors.left: parent.left
+            anchors.right: parent.right
+            height: 64
 
+            // Apple Spotlight magnifying glass
             Text {
+                id: searchIcon
                 anchors.left: parent.left
-                anchors.leftMargin: 18
+                anchors.leftMargin: 20
                 anchors.verticalCenter: parent.verticalCenter
                 text: "⌕"
-                color: colors.foreground
+                color: searchInput.activeFocus ? colors.primary : colors.muted
                 font.pixelSize: 26
+
+                Behavior on color {
+                    ColorAnimation { duration: 150 }
+                }
             }
 
+            // Mode indicator pill
+            Rectangle {
+                id: modeBadge
+                visible: root.activeMode !== "search"
+                anchors.left: searchIcon.right
+                anchors.leftMargin: 10
+                anchors.verticalCenter: parent.verticalCenter
+                height: 24
+                width: modeText.implicitWidth + 16
+                radius: 6
+                color: Qt.rgba(colors.primary.r, colors.primary.g, colors.primary.b, 0.22)
+                border.width: 1
+                border.color: Qt.rgba(colors.primary.r, colors.primary.g, colors.primary.b, 0.45)
+
+                Text {
+                    id: modeText
+                    anchors.centerIn: parent
+                    text: root.activeMode === "clipboard" ? "Clipboard" : "Terminal"
+                    color: colors.primary
+                    font.pixelSize: 11
+                    font.weight: Font.DemiBold
+                }
+            }
+
+            // Search Text Input
             TextInput {
                 id: searchInput
-                anchors.left: parent.left
-                anchors.leftMargin: 56
-                anchors.right: parent.right
+                anchors.left: modeBadge.visible ? modeBadge.right : searchIcon.right
+                anchors.leftMargin: 12
+                anchors.right: clearButton.visible ? clearButton.left : parent.right
+                anchors.rightMargin: 16
                 anchors.verticalCenter: parent.verticalCenter
-                color: "#f4f6f8"
-                selectionColor: "#668da5c0"
-                selectedTextColor: "#11151b"
-                font.pixelSize: 17
+                color: colors.foreground
+                selectionColor: Qt.rgba(colors.primary.r, colors.primary.g, colors.primary.b, 0.50)
+                selectedTextColor: colors.on_primary
+                font.pixelSize: 20
+                font.weight: Font.Normal
                 focus: true
                 clip: true
+
                 onTextChanged: {
-                    if (text.startsWith(":") && root.activeMode !== "clipboard") clipboardLoader.running = true
+                    if (text.startsWith(":") && root.activeMode !== "clipboard") {
+                        clipboardLoader.running = true
+                    }
                     root.rebuild(text)
                 }
+
                 Keys.onEscapePressed: Qt.quit()
                 Keys.onReturnPressed: root.runCurrent()
                 Keys.onEnterPressed: root.runCurrent()
@@ -190,123 +276,386 @@ PanelWindow {
                 Keys.onUpPressed: resultList.decrementCurrentIndex()
             }
 
+            // Placeholder Text
             Text {
                 visible: searchInput.text.length === 0
-                anchors.left: parent.left
-                anchors.leftMargin: 56
+                anchors.left: modeBadge.visible ? modeBadge.right : searchIcon.right
+                anchors.leftMargin: 12
                 anchors.verticalCenter: parent.verticalCenter
-                text: "Search"
+                text: root.activeMode === "clipboard" ? "Search clipboard history..." : (root.activeMode === "commands" ? "Run command..." : "Spotlight Search")
                 color: colors.muted
-                font.pixelSize: 17
+                font.pixelSize: 20
+                font.weight: Font.Normal
             }
-        }
 
-        Text {
-            id: calculationResult
-            visible: root.calculation.length > 0
-            x: 25
-            y: 78
-            width: parent.width - 50
-            height: 34
-            text: root.calculation
-            color: "#f0f3f7"
-            font.pixelSize: 22
-            verticalAlignment: Text.AlignVCenter
-        }
+            // Clear Button
+            Rectangle {
+                id: clearButton
+                visible: searchInput.text.length > 0
+                anchors.right: parent.right
+                anchors.rightMargin: 20
+                anchors.verticalCenter: parent.verticalCenter
+                width: 20
+                height: 20
+                radius: 10
+                color: clearMouse.containsMouse
+                    ? Qt.rgba(colors.surfaceVariant.r, colors.surfaceVariant.g, colors.surfaceVariant.b, 0.80)
+                    : Qt.rgba(colors.surfaceVariant.r, colors.surfaceVariant.g, colors.surfaceVariant.b, 0.40)
 
-        ListView {
-            id: resultList
-            visible: root.resultsVisible
-            x: 12
-            y: root.calculation.length > 0 ? 116 : 78
-            width: parent.width - 24
-            height: Math.max(0, spotlight.height - y - 12)
-            spacing: 3
-            clip: true
-            focus: true
-            model: resultModel
-            currentIndex: 0
-            boundsBehavior: Flickable.StopAtBounds
-
-            delegate: Rectangle {
-                id: resultDelegate
-                width: resultList.width
-                height: model.kind === "clipboard" && model.isImage ? 174 : 48
-                radius: 11
-                color: ListView.isCurrentItem ? Qt.rgba(colors.primary.r, colors.primary.g, colors.primary.b, 0.28) : (resultMouse.containsMouse ? Qt.rgba(colors.surfaceVariant.r, colors.surfaceVariant.g, colors.surfaceVariant.b, 0.32) : Qt.rgba(colors.surface.r, colors.surface.g, colors.surface.b, 0.28))
-                border.width: 0
-                opacity: 0
-
-                Component.onCompleted: rowAnimation.start()
-
-                SequentialAnimation {
-                    id: rowAnimation
-                    PauseAnimation { duration: Math.max(0, Math.min(index * 12, 100)) }
-                    NumberAnimation { target: resultDelegate; property: "opacity"; to: 1; duration: 130; easing.type: Easing.OutCubic }
-                }
-
-                Behavior on color { ColorAnimation { duration: 120; easing.type: Easing.OutCubic } }
-
-                Rectangle {
-                    width: 70
-                    height: 22
-                    radius: 7
-                    anchors.left: parent.left
-                    anchors.leftMargin: 12
-                    anchors.top: parent.top
-                    anchors.topMargin: 9
-                    color: ListView.isCurrentItem ? Qt.rgba(colors.primary.r, colors.primary.g, colors.primary.b, 0.42) : Qt.rgba(colors.surfaceVariant.r, colors.surfaceVariant.g, colors.surfaceVariant.b, 0.35)
-
-                    Text {
-                        anchors.centerIn: parent
-                        text: model.kind === "run" ? "RUN" : (model.kind === "app" ? "APP" : (model.kind === "file" ? "FILE" : (model.kind === "command" ? "CMD" : "CLIPBOARD")))
-                        color: colors.foreground
-                        font.pixelSize: 9
-                        font.weight: Font.DemiBold
-                    }
-                }
-
-                Column {
-                    anchors.left: parent.left
-                    anchors.leftMargin: 96
-                    anchors.right: parent.right
-                    anchors.rightMargin: 16
-                    anchors.top: parent.top
-                    anchors.topMargin: 7
-                    spacing: 2
-
-                    Text {
-                        width: parent.width
-                        text: model.kind === "clipboard" && model.isImage ? "BINARY DATA  ·  " + model.mime : model.name
-                        color: colors.foreground
-                        font.pixelSize: 13
-                        elide: Text.ElideRight
-                    }
-
-                    Text {
-                        width: parent.width
-                        text: model.kind === "clipboard" ? model.label : model.subtitle
-                        color: colors.muted
-                        font.pixelSize: 10
-                        elide: Text.ElideRight
-                    }
-
-                    Image {
-                        visible: model.kind === "clipboard" && model.isImage && model.preview !== ""
-                        width: parent.width
-                        height: 112
-                        source: model.preview || ""
-                        fillMode: Image.PreserveAspectFit
-                        smooth: true
-                        cache: false
-                    }
+                Text {
+                    anchors.centerIn: parent
+                    text: "✕"
+                    color: colors.muted
+                    font.pixelSize: 10
                 }
 
                 MouseArea {
-                    id: resultMouse
+                    id: clearMouse
                     anchors.fill: parent
                     hoverEnabled: true
-                    onClicked: { resultList.currentIndex = index; root.runCurrent() }
+                    onClicked: {
+                        searchInput.text = ""
+                        searchInput.forceActiveFocus()
+                    }
+                }
+            }
+        }
+
+        // Horizontal Divider below Search Bar
+        Rectangle {
+            id: horizontalDivider
+            visible: root.resultsVisible
+            anchors.top: searchBar.bottom
+            anchors.left: parent.left
+            anchors.right: parent.right
+            height: 1
+            color: Qt.rgba(colors.outline.r, colors.outline.g, colors.outline.b, 0.20)
+        }
+
+        // Calculation Bar (if calculation exists and no results)
+        Item {
+            id: calculationPane
+            visible: root.calculation.length > 0 && resultModel.count === 0
+            anchors.top: horizontalDivider.bottom
+            anchors.left: parent.left
+            anchors.right: parent.right
+            anchors.bottom: parent.bottom
+
+            Row {
+                anchors.centerIn: parent
+                spacing: 16
+
+                Text {
+                    text: "="
+                    color: colors.primary
+                    font.pixelSize: 34
+                    font.weight: Font.Light
+                    anchors.verticalCenter: parent.verticalCenter
+                }
+
+                Text {
+                    text: root.calculation
+                    color: colors.foreground
+                    font.pixelSize: 36
+                    font.weight: Font.DemiBold
+                    anchors.verticalCenter: parent.verticalCenter
+                }
+            }
+        }
+
+        // Main Content Area
+        Item {
+            id: contentArea
+            visible: root.resultsVisible && resultModel.count > 0
+            anchors.top: horizontalDivider.bottom
+            anchors.left: parent.left
+            anchors.right: parent.right
+            anchors.bottom: parent.bottom
+
+            // Results List (Takes 310px in clipboard mode; takes full width in search mode)
+            ListView {
+                id: resultList
+                anchors.top: parent.top
+                anchors.left: parent.left
+                anchors.bottom: parent.bottom
+                anchors.topMargin: 8
+                anchors.bottomMargin: 8
+                anchors.leftMargin: 8
+                width: root.isClipboardMode ? 310 : (parent.width - 16)
+                spacing: 2
+                clip: true
+                model: resultModel
+                currentIndex: 0
+                boundsBehavior: Flickable.StopAtBounds
+
+                Behavior on width {
+                    NumberAnimation { duration: 220; easing.type: Easing.OutQuint }
+                }
+
+                delegate: Rectangle {
+                    id: itemDelegate
+                    width: resultList.width - 6
+                    height: 48
+                    radius: 8
+                    color: ListView.isCurrentItem
+                        ? Qt.rgba(colors.primary.r, colors.primary.g, colors.primary.b, 0.30)
+                        : (itemMouse.containsMouse ? Qt.rgba(colors.surfaceVariant.r, colors.surfaceVariant.g, colors.surfaceVariant.b, 0.35) : "transparent")
+
+                    border.width: ListView.isCurrentItem ? 1 : 0
+                    border.color: Qt.rgba(colors.primary.r, colors.primary.g, colors.primary.b, 0.50)
+
+                    Behavior on color {
+                        ColorAnimation { duration: 100 }
+                    }
+
+                    // Leading Category Icon Badge
+                    Rectangle {
+                        id: itemBadge
+                        width: 30
+                        height: 30
+                        radius: 7
+                        anchors.left: parent.left
+                        anchors.leftMargin: 10
+                        anchors.verticalCenter: parent.verticalCenter
+                        color: ListView.isCurrentItem
+                            ? Qt.rgba(colors.primary.r, colors.primary.g, colors.primary.b, 0.40)
+                            : Qt.rgba(colors.surfaceVariant.r, colors.surfaceVariant.g, colors.surfaceVariant.b, 0.55)
+
+                        Text {
+                            anchors.centerIn: parent
+                            text: model.kind === "run" ? "⚡" : (model.kind === "app" ? "◻" : (model.kind === "file" ? "📄" : (model.kind === "command" ? ">_" : (model.isImage ? "🖼" : "📋"))))
+                            color: colors.foreground
+                            font.pixelSize: 13
+                        }
+                    }
+
+                    // Title & Subtitle Column
+                    Column {
+                        anchors.left: itemBadge.right
+                        anchors.leftMargin: 10
+                        anchors.right: trailingHint.left
+                        anchors.rightMargin: 10
+                        anchors.verticalCenter: parent.verticalCenter
+                        spacing: 2
+
+                        Text {
+                            width: parent.width
+                            text: model.isImage ? "Image Screenshot" : model.name
+                            color: colors.foreground
+                            font.pixelSize: 13
+                            font.weight: ListView.isCurrentItem ? Font.DemiBold : Font.Normal
+                            elide: Text.ElideRight
+                        }
+
+                        Text {
+                            width: parent.width
+                            text: model.isImage ? model.subtitle : (model.subtitle || model.kind)
+                            color: ListView.isCurrentItem ? colors.foreground : colors.muted
+                            font.pixelSize: 11
+                            elide: Text.ElideRight
+                        }
+                    }
+
+                    // Trailing Action Pill or Chevron
+                    Item {
+                        id: trailingHint
+                        anchors.right: parent.right
+                        anchors.rightMargin: 10
+                        anchors.verticalCenter: parent.verticalCenter
+                        width: root.isClipboardMode ? 16 : actionPill.implicitWidth
+                        height: 24
+
+                        // In clipboard mode: show subtle chevron
+                        Text {
+                            visible: root.isClipboardMode && ListView.isCurrentItem
+                            anchors.centerIn: parent
+                            text: "›"
+                            color: colors.primary
+                            font.pixelSize: 16
+                            font.weight: Font.DemiBold
+                        }
+
+                        // In search mode: show sleek action pill when selected
+                        Rectangle {
+                            id: actionPill
+                            visible: !root.isClipboardMode && ListView.isCurrentItem
+                            anchors.right: parent.right
+                            anchors.verticalCenter: parent.verticalCenter
+                            height: 22
+                            width: actionPillText.implicitWidth + 14
+                            radius: 6
+                            color: Qt.rgba(colors.primary.r, colors.primary.g, colors.primary.b, 0.35)
+                            border.width: 1
+                            border.color: Qt.rgba(colors.primary.r, colors.primary.g, colors.primary.b, 0.55)
+
+                            Text {
+                                id: actionPillText
+                                anchors.centerIn: parent
+                                text: model.kind === "run" ? "↩ Run" : (model.kind === "app" ? "↩ Open" : (model.kind === "file" ? "↩ Open" : "↩ Run"))
+                                color: colors.foreground
+                                font.pixelSize: 10
+                                font.weight: Font.DemiBold
+                            }
+                        }
+                    }
+
+                    MouseArea {
+                        id: itemMouse
+                        anchors.fill: parent
+                        hoverEnabled: true
+                        onClicked: {
+                            resultList.currentIndex = index
+                            root.runCurrent()
+                        }
+                    }
+                }
+            }
+
+            // Vertical Divider (ONLY in clipboard mode)
+            Rectangle {
+                id: verticalDivider
+                visible: root.isClipboardMode
+                anchors.top: parent.top
+                anchors.bottom: parent.bottom
+                anchors.left: resultList.right
+                anchors.leftMargin: 4
+                width: 1
+                color: Qt.rgba(colors.outline.r, colors.outline.g, colors.outline.b, 0.20)
+            }
+
+            // Right Column: Preview Pane (ONLY in clipboard mode)
+            Item {
+                id: previewPane
+                visible: root.isClipboardMode
+                anchors.top: parent.top
+                anchors.bottom: parent.bottom
+                anchors.left: verticalDivider.right
+                anchors.right: parent.right
+                anchors.margins: 14
+
+                // Clipboard Image Preview (Full, unclipped viewport)
+                Item {
+                    id: imagePreviewSection
+                    visible: root.currentItem !== null && root.currentItem.isImage
+                    anchors.fill: parent
+
+                    Column {
+                        anchors.fill: parent
+                        spacing: 10
+
+                        // Image viewport frame
+                        Rectangle {
+                            width: parent.width
+                            height: parent.height - 70
+                            radius: 10
+                            color: Qt.rgba(colors.background.r, colors.background.g, colors.background.b, 0.55)
+                            border.width: 1
+                            border.color: Qt.rgba(colors.outline.r, colors.outline.g, colors.outline.b, 0.25)
+                            clip: true
+
+                            Image {
+                                id: fullImagePreview
+                                anchors.fill: parent
+                                anchors.margins: 8
+                                source: (root.currentItem && root.currentItem.preview) ? root.currentItem.preview : ""
+                                fillMode: Image.PreserveAspectFit
+                                smooth: true
+                                asynchronous: true
+                                cache: false
+                            }
+                        }
+
+                        // Image metadata & Action Prompt
+                        Row {
+                            width: parent.width
+                            spacing: 8
+
+                            Rectangle {
+                                height: 22
+                                width: mimeText.implicitWidth + 12
+                                radius: 5
+                                color: Qt.rgba(colors.primary.r, colors.primary.g, colors.primary.b, 0.25)
+                                border.width: 1
+                                border.color: Qt.rgba(colors.primary.r, colors.primary.g, colors.primary.b, 0.45)
+
+                                Text {
+                                    id: mimeText
+                                    anchors.centerIn: parent
+                                    text: (root.currentItem && root.currentItem.mime) ? root.currentItem.mime : "image/png"
+                                    color: colors.primary
+                                    font.pixelSize: 10
+                                    font.weight: Font.DemiBold
+                                }
+                            }
+
+                            Text {
+                                text: (root.currentItem && root.currentItem.label) ? root.currentItem.label.replace(/^\[\[\s*binary data\s*/i, "").replace(/\s*\]\]$/, "") : ""
+                                color: colors.muted
+                                font.pixelSize: 11
+                                anchors.verticalCenter: parent.verticalCenter
+                                elide: Text.ElideRight
+                            }
+                        }
+
+                        // Return Action hint
+                        Text {
+                            text: "Press ↩ Return to paste image"
+                            color: colors.muted
+                            font.pixelSize: 11
+                        }
+                    }
+                }
+
+                // Clipboard Text Preview
+                Item {
+                    id: textPreviewSection
+                    visible: root.currentItem !== null && !root.currentItem.isImage
+                    anchors.fill: parent
+
+                    Column {
+                        anchors.fill: parent
+                        spacing: 12
+
+                        Text {
+                            text: "Clipboard Text Entry"
+                            color: colors.muted
+                            font.pixelSize: 12
+                            font.weight: Font.DemiBold
+                        }
+
+                        Rectangle {
+                            width: parent.width
+                            height: parent.height - 60
+                            radius: 10
+                            color: Qt.rgba(colors.background.r, colors.background.g, colors.background.b, 0.55)
+                            border.width: 1
+                            border.color: Qt.rgba(colors.outline.r, colors.outline.g, colors.outline.b, 0.25)
+                            clip: true
+
+                            Flickable {
+                                anchors.fill: parent
+                                anchors.margins: 12
+                                contentWidth: width
+                                contentHeight: textContent.implicitHeight
+                                clip: true
+
+                                Text {
+                                    id: textContent
+                                    width: parent.width
+                                    text: root.currentItem ? root.currentItem.name : ""
+                                    color: colors.foreground
+                                    font.pixelSize: 13
+                                    wrapMode: Text.WrapAtWordBoundaryOrAnywhere
+                                }
+                            }
+                        }
+
+                        Text {
+                            text: "Press ↩ Return to restore to clipboard"
+                            color: colors.muted
+                            font.pixelSize: 11
+                        }
+                    }
                 }
             }
         }
