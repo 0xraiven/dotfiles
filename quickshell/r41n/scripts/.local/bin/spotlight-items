@@ -1,0 +1,31 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+work_dir="$(mktemp -d)"
+cleanup() {
+  rm -rf "$work_dir"
+}
+trap cleanup EXIT
+
+"${HOME}/.local/bin/launcher-items" > "$work_dir/apps.json"
+
+bash -lc 'compgen -c | sort -u' | \
+  jq -Rsc 'split("\n") | map(select(length > 0) | {id: ., name: ., subtitle: "Environment command", kind: "command"}) | .[0:600]' \
+  > "$work_dir/commands.json"
+
+find "$HOME" \
+  -type d \( \
+    -path "$HOME/.cache" \
+    -o -path "$HOME/.local/share/Trash" \
+    -o -path '*/.git' \
+    -o -path '*/target' \
+  \) -prune \
+  -o -type f -print 2>/dev/null | sort -f | \
+  jq -Rsc 'split("\n") | map(select(length > 0) | {id: ., name: (split("/") | last), subtitle: ., kind: "file"}) | .[0:5000]' \
+  > "$work_dir/files.json"
+
+jq -cn \
+  --slurpfile apps "$work_dir/apps.json" \
+  --slurpfile commands "$work_dir/commands.json" \
+  --slurpfile files "$work_dir/files.json" \
+  '$apps[0] | map(. + {kind: "app", subtitle: "Application"}) + $commands[0] + $files[0]'

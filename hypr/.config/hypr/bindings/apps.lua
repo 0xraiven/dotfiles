@@ -2,7 +2,7 @@ local constants = require("config.constants")
 
 hl.bind("SUPER + T", hl.dsp.exec_cmd(constants.terminal))
 hl.bind("SUPER + W", hl.dsp.exec_cmd(constants.default_browser))
-hl.bind("SUPER + D", hl.dsp.exec_cmd(constants.launcher))
+hl.bind("SUPER + SUPER_L", hl.dsp.exec_cmd("quickshell --no-duplicate -c launcher"), { release = true })
 hl.bind("SUPER + E", hl.dsp.exec_cmd(constants.file_manager))
 hl.bind("SUPER + C", hl.dsp.exec_cmd(constants.editor))
 hl.bind("SUPER + V", hl.dsp.exec_cmd("quickshell --no-duplicate -c clipboard"))

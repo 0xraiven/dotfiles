@@ -68,13 +68,17 @@ This repository is the primary source of truth for the current Linux desktop env
 ├── quickshell/
 │   └── .config/
 │       └── quickshell/
+│           ├── launcher/
+│           │   └── shell.qml
 │           └── rice/
 │               └── shell.qml
 │           └── clipboard/
 │               └── shell.qml
-├── scripts/
-│   └── .local/
-│       └── bin/
+├── quickshell/
+│   └── r41n/
+│       └── scripts/
+│           └── .local/
+│               └── bin/
 │           ├── apply-palette
 │           ├── clipboard-items
 │           ├── clipboard-history
@@ -126,3 +130,5 @@ The generated `colors.css` is runtime output and is intentionally not stored in 
 - Cliphist stores text and image clipboard entries. `Super+V` opens the Quickshell Material-style picker and restores the selected entry.
 - Image entries are labeled as binary data and show a thumbnail directly below the metadata.
 - Print and Shift+Print save screenshots to Pictures and copy them into the image clipboard history.
+- The Super key opens the unified Quickshell Spotlight surface below Waybar with a translucent Material glass panel and fluid entry animation. Plain text searches apps and files; mathematical expressions show Qalc results; `:` searches clipboard history; `>` filters runnable environment commands; any raw query also exposes a Run command action.
+- Use Up/Down to select a result, Enter to launch or run it, and Escape to close Spotlight.

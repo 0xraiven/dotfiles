@@ -4,7 +4,7 @@ set -euo pipefail
 mode="${1:-region}"
 pictures_dir="$(xdg-user-dir PICTURES)"
 timestamp="$(date +%Y%m%d-%H%M%S)"
-output_file="$pictures_dir/screenshot-$timestamp.png"
+output_file="$pictures_dir/Screenshots/screenshot-$timestamp.png"
 
 mkdir -p "$pictures_dir"
 

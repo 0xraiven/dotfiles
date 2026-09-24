@@ -1,0 +1,34 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+app_dirs=(
+  "/usr/share/applications"
+  "${HOME}/.local/share/applications"
+)
+
+for directory in "${app_dirs[@]}"; do
+  [ -d "$directory" ] || continue
+  find "$directory" -maxdepth 1 -type f -name '*.desktop' -print
+ done | sort -u | while IFS= read -r desktop_file; do
+  type="$(awk -F= '$1 == "Type" { print substr($0, index($0, "=") + 1); exit }' "$desktop_file")"
+  no_display="$(awk -F= '$1 == "NoDisplay" { print substr($0, index($0, "=") + 1); exit }' "$desktop_file")"
+  hidden="$(awk -F= '$1 == "Hidden" { print substr($0, index($0, "=") + 1); exit }' "$desktop_file")"
+  name="$(awk -F= '$1 == "Name" { print substr($0, index($0, "=") + 1); exit }' "$desktop_file")"
+  icon="$(awk -F= '$1 == "Icon" { print substr($0, index($0, "=") + 1); exit }' "$desktop_file")"
+  id="$(basename "$desktop_file" .desktop)"
+
+  if [[ "$icon" == /* ]] && [ ! -f "$icon" ]; then
+    icon=""
+  elif [[ "$icon" != /* ]]; then
+    icon="${icon##*.}"
+    icon="${icon%-desktop}"
+    icon="${icon,,}"
+  fi
+
+  [ "$type" = "Application" ] || continue
+  [ "$no_display" = "true" ] && continue
+  [ "$hidden" = "true" ] && continue
+  [ -n "$name" ] || continue
+
+  jq -cn --arg id "$id" --arg name "$name" --arg icon "$icon" '{id: $id, name: $name, icon: $icon}'
+done | jq -s 'sort_by(.name | ascii_downcase)'

@@ -3,11 +3,25 @@ set -Eeuo pipefail
 
 REPO_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 HOME_DIR="${HOME}"
+SCRIPT_TARGET="$HOME_DIR/.config/quickshell/r41n/scripts"
 BACKUP_ROOT="${DOTFILES_BACKUP_ROOT:-$HOME_DIR/.dotfiles-backups}"
 OPERATION="install"
 DRY_RUN=false
 CUSTOM_BACKUP_ID=""
 USE_BACKUP=true
+LEGACY_SCRIPT_NAMES=(
+  apply-palette
+  clipboard-history
+  clipboard-items
+  clipboard-restore
+  clipboard-start
+  launcher-items
+  screenshot
+  spotlight-items
+  wallpaper-next
+  wallpaper-random
+  waybar-start
+)
 
 MANAGED_TARGETS=(
   "$HOME_DIR/.config/hypr"
@@ -16,7 +30,7 @@ MANAGED_TARGETS=(
   "$HOME_DIR/.config/kitty"
   "$HOME_DIR/.config/quickshell"
   "$HOME_DIR/.config/matugen"
-  "$HOME_DIR/.local/bin"
+  "$SCRIPT_TARGET"
   "$HOME_DIR/.local/share/dotfiles-assets"
 )
 
@@ -89,6 +103,13 @@ remove_if_exists() {
   if [ -e "$target" ] || [ -L "$target" ]; then
     rm -rf "$target"
   fi
+}
+
+remove_legacy_scripts() {
+  local script_name
+  for script_name in "${LEGACY_SCRIPT_NAMES[@]}"; do
+    remove_if_exists "$HOME_DIR/.local/bin/$script_name"
+  done
 }
 
 latest_backup_id() {
@@ -191,9 +212,12 @@ install_repo() {
     copy_tree "$REPO_DIR/fish/.config/fish" "$HOME_DIR/.config/fish"
     if [ -d "$REPO_DIR/kitty/.config/kitty" ]; then copy_tree "$REPO_DIR/kitty/.config/kitty" "$HOME_DIR/.config/kitty"; fi
     if [ -d "$REPO_DIR/quickshell/.config/quickshell" ]; then copy_tree "$REPO_DIR/quickshell/.config/quickshell" "$HOME_DIR/.config/quickshell"; fi
-    if [ -d "$REPO_DIR/scripts/.local/bin" ]; then
-      ensure_dir "$HOME_DIR/.local/bin"
-      echo "[dry-run] cp -a $REPO_DIR/scripts/.local/bin/. $HOME_DIR/.local/bin/"
+    if [ -d "$REPO_DIR/quickshell/r41n/scripts/.local/bin" ]; then
+      ensure_dir "$SCRIPT_TARGET"
+      echo "[dry-run] cp -a $REPO_DIR/quickshell/r41n/scripts/. $SCRIPT_TARGET/"
+      for script_name in "${LEGACY_SCRIPT_NAMES[@]}"; do
+        echo "[dry-run] rm -f $HOME_DIR/.local/bin/$script_name"
+      done
     fi
     if [ -d "$REPO_DIR/assets" ]; then
       ensure_dir "$HOME_DIR/.local/share"
@@ -220,9 +244,9 @@ install_repo() {
       copy_tree "$REPO_DIR/matugen/.config/matugen" "$HOME_DIR/.config/matugen"
     fi
 
-    if [ -d "$REPO_DIR/scripts/.local/bin" ]; then
-      ensure_dir "$HOME_DIR/.local/bin"
-      cp -a "$REPO_DIR/scripts/.local/bin/." "$HOME_DIR/.local/bin/"
+    if [ -d "$REPO_DIR/quickshell/r41n/scripts/.local/bin" ]; then
+      copy_tree "$REPO_DIR/quickshell/r41n/scripts" "$SCRIPT_TARGET"
+      remove_legacy_scripts
     fi
 
     if [ -d "$REPO_DIR/assets" ]; then

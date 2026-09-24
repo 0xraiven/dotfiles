@@ -26,7 +26,7 @@ cliphist list | head -40 | while IFS=$'\t' read -r entry_id label; do
     --arg label "$label" \
     --arg mime "$mime_type" \
     --arg preview "$preview" \
-    '{id: $id, label: $label, mime: $mime, preview: $preview, isImage: ($mime | startswith("image/"))}'
+    '{id: $id, name: $label, label: $label, subtitle: $mime, kind: "clipboard", mime: $mime, preview: $preview, isImage: ($mime | startswith("image/"))}'
 
   rm -f "$entry_file"
 done | jq -s .

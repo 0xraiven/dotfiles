@@ -17,10 +17,10 @@ The repo mirrors the desktop environment using XDG-compatible directories:
 - waybar/.config/waybar/ for bar config and styling
 - fish/.config/fish/ for shell config and functions
 - kitty/.config/kitty/ for terminal config
-- quickshell/.config/quickshell/ for widget shell config and wallpaper orchestration
+- quickshell/.config/quickshell/ for widget shell config, wallpaper orchestration, and Material-style launcher UI
 - quickshell/.config/quickshell/clipboard/ for the Material-style clipboard overlay
 - matugen/.config/matugen/ for wallpaper-derived color generation templates
-- scripts/.local/bin/ for helper scripts, including idempotent desktop startup and clipboard helpers
+- quickshell/r41n/scripts/.local/bin/ for helper scripts, including idempotent desktop startup and clipboard helpers
 - assets/ for reusable artwork, icons, cursors, and fonts
 
 ## Workflow

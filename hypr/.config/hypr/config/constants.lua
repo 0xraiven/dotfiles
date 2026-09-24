@@ -1,6 +1,6 @@
 return {
     terminal = "kitty",
-    launcher = "wofi --show drun",
+    launcher = "quickshell --no-duplicate -c launcher",
     file_manager = "nautilus",
     default_browser = "zen-browser",
     editor = "code",
