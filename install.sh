@@ -15,6 +15,7 @@ MANAGED_TARGETS=(
   "$HOME_DIR/.config/fish"
   "$HOME_DIR/.config/kitty"
   "$HOME_DIR/.config/quickshell"
+  "$HOME_DIR/.config/matugen"
   "$HOME_DIR/.local/bin"
   "$HOME_DIR/.local/share/dotfiles-assets"
 )
@@ -213,6 +214,10 @@ install_repo() {
 
     if [ -d "$REPO_DIR/quickshell/.config/quickshell" ]; then
       copy_tree "$REPO_DIR/quickshell/.config/quickshell" "$HOME_DIR/.config/quickshell"
+    fi
+
+    if [ -d "$REPO_DIR/matugen/.config/matugen" ]; then
+      copy_tree "$REPO_DIR/matugen/.config/matugen" "$HOME_DIR/.config/matugen"
     fi
 
     if [ -d "$REPO_DIR/scripts/.local/bin" ]; then

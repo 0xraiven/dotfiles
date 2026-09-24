@@ -1,0 +1,6 @@
+[config]
+# Keep generated output in the live XDG config tree.
+# The wallpaper scripts pass the selected image to matugen explicitly.
+
+[templates]
+waybar = { input_path = '~/.config/matugen/templates/waybar-colors.css', output_path = '~/.config/waybar/colors.css' }

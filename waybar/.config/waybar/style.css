@@ -1,3 +1,5 @@
+@import "colors.css";
+
 * {
     font-family: "JetBrainsMono Nerd Font", "Noto Sans", sans-serif;
     font-size: 13px;
@@ -6,14 +8,14 @@
 
 window#waybar {
     background: transparent;
-    color: #cdd6f4;
+    color: @foreground;
 }
 
 .modules-left,
 .modules-center,
 .modules-right {
-    background: rgba(17, 17, 27, 0.92);
-    border: 1px solid rgba(69, 71, 90, 0.8);
+    background: alpha(@surface, 0.92);
+    border: 1px solid alpha(@surface_variant, 0.8);
     border-radius: 12px;
     margin-top: 6px;
 }
@@ -33,7 +35,7 @@ window#waybar {
 }
 
 #workspaces button {
-    color: #6c7086;
+    color: @muted;
     background: transparent;
     border: none;
     border-radius: 8px;
@@ -42,22 +44,22 @@ window#waybar {
 }
 
 #workspaces button.active {
-    color: #11111b;
-    background: #89b4fa;
+    color: @on_primary;
+    background: @primary;
 }
 
 #workspaces button:hover {
-    background: #313244;
-    color: #cdd6f4;
+    background: @surface_variant;
+    color: @foreground;
 }
 
 #window {
-    color: #bac2de;
+    color: @muted;
     margin-left: 10px;
 }
 
 #clock {
-    color: #cdd6f4;
+    color: @foreground;
     font-weight: bold;
 }
 
@@ -72,27 +74,27 @@ window#waybar {
 }
 
 #network {
-    color: #89dceb;
+    color: @tertiary;
 }
 
 #pulseaudio {
-    color: #cba6f7;
+    color: @secondary;
 }
 
 #backlight {
-    color: #f9e2af;
+    color: @tertiary;
 }
 
 #battery {
-    color: #a6e3a1;
+    color: @primary;
 }
 
 #cpu {
-    color: #f38ba8;
+    color: @error;
 }
 
 #memory {
-    color: #fab387;
+    color: @secondary;
 }
 
 #tray {

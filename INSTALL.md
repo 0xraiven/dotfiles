@@ -59,6 +59,12 @@ This repository is the primary source of truth for the current Linux desktop env
 │   └── .config/
 │       └── kitty/
 │           └── kitty.conf
+├── matugen/
+│   └── .config/
+│       └── matugen/
+│           ├── config.toml
+│           └── templates/
+│               └── waybar-colors.css
 ├── quickshell/
 │   └── .config/
 │       └── quickshell/
@@ -67,6 +73,7 @@ This repository is the primary source of truth for the current Linux desktop env
 ├── scripts/
 │   └── .local/
 │       └── bin/
+│           ├── apply-palette
 │           ├── waybar-start
 │           ├── wallpaper-next
 │           └── wallpaper-random
@@ -94,6 +101,12 @@ cd ~/dotfiles
 
 The unified installer copies the repo-managed config into the correct XDG paths under $HOME for the current session and automatically creates a timestamped backup before mutating the live environment. If an install or uninstall step fails, the script restores the previous version automatically.
 
+## Wallpaper palettes
+
+The wallpaper scripts require `matugen`, `hyprpaper`, `hyprctl`, and `jq`. Each wallpaper change runs Matugen against the selected image, writes the generated palette to `~/.config/waybar/colors.css`, and signals Waybar to reload its colors.
+
+The generated `colors.css` is runtime output and is intentionally not stored in the repository. The source template lives at `matugen/.config/matugen/templates/waybar-colors.css`.
+
 ## Notes
 
 - The repo intentionally stores config under nested folders matching the real XDG layout.
@@ -102,3 +115,4 @@ The unified installer copies the repo-managed config into the correct XDG paths 
 - Backups are stored under ~/.dotfiles-backups by default and can be restored with --restore.
 - Quickshell owns wallpaper selection and rotation; hyprpaper remains the renderer.
 - Run wallpaper-next or wallpaper-random manually to change the current wallpaper.
+- Matugen generates Waybar colors from every selected wallpaper and refreshes Waybar automatically.

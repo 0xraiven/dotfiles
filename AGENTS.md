@@ -18,6 +18,7 @@ The repo mirrors the desktop environment using XDG-compatible directories:
 - fish/.config/fish/ for shell config and functions
 - kitty/.config/kitty/ for terminal config
 - quickshell/.config/quickshell/ for widget shell config and wallpaper orchestration
+- matugen/.config/matugen/ for wallpaper-derived color generation templates
 - scripts/.local/bin/ for helper scripts, including idempotent desktop startup helpers
 - assets/ for reusable artwork, icons, cursors, and fonts
 

@@ -20,6 +20,7 @@ wallpaper="${wallpapers[$((RANDOM % ${#wallpapers[@]}))]}"
 
 for _ in {1..20}; do
   if hyprctl hyprpaper wallpaper "$monitor,$wallpaper" >/dev/null 2>&1; then
+    "$HOME/.local/bin/apply-palette" "$wallpaper"
     exit 0
   fi
   sleep 0.25

@@ -1,0 +1,27 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+WALLPAPER="${1:-}"
+MATUGEN_CONFIG="${MATUGEN_CONFIG:-${HOME}/.config/matugen/config.toml}"
+
+if [ -z "$WALLPAPER" ] || [ ! -f "$WALLPAPER" ]; then
+  echo "Usage: apply-palette /path/to/wallpaper" >&2
+  exit 2
+fi
+
+if ! command -v matugen >/dev/null 2>&1; then
+  echo "matugen is not installed; skipping palette generation" >&2
+  exit 0
+fi
+
+matugen image \
+  --config "$MATUGEN_CONFIG" \
+  --mode dark \
+  --type scheme-tonal-spot \
+  --source-color-index 0 \
+  --quiet \
+  "$WALLPAPER"
+
+if command -v pkill >/dev/null 2>&1; then
+  pkill --signal USR2 --exact waybar 2>/dev/null || true
+fi
