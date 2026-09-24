@@ -1,0 +1,13 @@
+local constants = require("config.constants")
+
+hl.bind("SUPER + T", hl.dsp.exec_cmd(constants.terminal))
+hl.bind("SUPER + W", hl.dsp.exec_cmd(constants.default_browser))
+hl.bind("SUPER + D", hl.dsp.exec_cmd(constants.launcher))
+hl.bind("SUPER + E", hl.dsp.exec_cmd(constants.file_manager))
+hl.bind("SUPER + C", hl.dsp.exec_cmd(constants.editor))
+hl.bind("SUPER + Q", hl.dsp.window.close())
+hl.bind("SUPER + SHIFT + Q", hl.dsp.exit())
+hl.bind("SUPER + F", hl.dsp.window.fullscreen())
+hl.bind("SUPER + SPACE", hl.dsp.window.float({ action = "toggle" }))
+hl.bind("SUPER + TAB", hl.dsp.window.cycle_next())
+hl.bind("SUPER + SHIFT + R", hl.dsp.exec_cmd("hyprctl reload"))
