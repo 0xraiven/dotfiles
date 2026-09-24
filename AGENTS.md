@@ -20,7 +20,7 @@ The repo mirrors the desktop environment using XDG-compatible directories:
 - quickshell/.config/quickshell/ for widget shell config, wallpaper orchestration, and Material-style launcher UI
 - quickshell/.config/quickshell/clipboard/ for the Material-style clipboard overlay
 - matugen/.config/matugen/ for wallpaper-derived color generation templates
-- quickshell/r41n/scripts/.local/bin/ for helper scripts, including idempotent desktop startup and clipboard helpers
+- quickshell/.config/quickshell/scripts/ for modular helper scripts (clipboard, launcher, system, wallpaper)
 - assets/ for reusable artwork, icons, cursors, and fonts
 
 ## Workflow

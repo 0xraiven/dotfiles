@@ -41,13 +41,13 @@ PanelWindow {
     }
 
     function restore(entryId) {
-        Quickshell.execDetached(["sh", "-lc", "$HOME/.config/quickshell/r41n/scripts/.local/bin/clipboard-restore " + entryId])
+        Quickshell.execDetached(["sh", "-lc", "$HOME/.config/quickshell/scripts/clipboard/clipboard-restore " + entryId])
         Qt.quit()
     }
 
     Process {
         id: loader
-        command: ["sh", "-lc", "$HOME/.config/quickshell/r41n/scripts/.local/bin/clipboard-items"]
+        command: ["sh", "-lc", "$HOME/.config/quickshell/scripts/clipboard/clipboard-items"]
         running: true
         stdout: StdioCollector {
             id: output

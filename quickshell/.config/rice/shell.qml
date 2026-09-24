@@ -5,7 +5,7 @@ Scope {
     id: root
 
     // Wallpaper selection and timing belong to Quickshell; hyprpaper only renders.
-    property string wallpaperCommand: "$HOME/.config/quickshell/r41n/scripts/.local/bin/wallpaper-next"
+    property string wallpaperCommand: "$HOME/.config/quickshell/scripts/wallpaper/wallpaper-next"
     property int rotationInterval: 900000
 
     function changeWallpaper() {

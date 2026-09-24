@@ -18,9 +18,11 @@ fi
 
 wallpaper="${wallpapers[$((RANDOM % ${#wallpapers[@]}))]}"
 
+SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
+
 for _ in {1..20}; do
   if hyprctl hyprpaper wallpaper "$monitor,$wallpaper" >/dev/null 2>&1; then
-    "$HOME/.config/quickshell/r41n/scripts/.local/bin/apply-palette" "$wallpaper"
+    "$SCRIPT_DIR/apply-palette" "$wallpaper"
     exit 0
   fi
   sleep 0.25

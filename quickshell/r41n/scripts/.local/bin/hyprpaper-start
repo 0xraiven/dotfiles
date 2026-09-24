@@ -1,6 +1,0 @@
-#!/usr/bin/env bash
-set -euo pipefail
-
-LOCK_FILE="${XDG_RUNTIME_DIR:-/tmp}/dotfiles-hyprpaper.lock"
-
-exec flock --nonblock "$LOCK_FILE" hyprpaper "$@"

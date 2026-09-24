@@ -3,7 +3,7 @@ set -Eeuo pipefail
 
 REPO_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 HOME_DIR="${HOME}"
-SCRIPT_TARGET="$HOME_DIR/.config/quickshell/r41n/scripts"
+SCRIPT_TARGET="$HOME_DIR/.config/quickshell/scripts"
 BACKUP_ROOT="${DOTFILES_BACKUP_ROOT:-$HOME_DIR/.dotfiles-backups}"
 OPERATION="install"
 DRY_RUN=false
@@ -211,10 +211,10 @@ install_repo() {
     copy_tree "$REPO_DIR/waybar/.config/waybar" "$HOME_DIR/.config/waybar"
     copy_tree "$REPO_DIR/fish/.config/fish" "$HOME_DIR/.config/fish"
     if [ -d "$REPO_DIR/kitty/.config/kitty" ]; then copy_tree "$REPO_DIR/kitty/.config/kitty" "$HOME_DIR/.config/kitty"; fi
-    if [ -d "$REPO_DIR/quickshell/.config/quickshell" ]; then copy_tree "$REPO_DIR/quickshell/.config/quickshell" "$HOME_DIR/.config/quickshell"; fi
-    if [ -d "$REPO_DIR/quickshell/r41n/scripts/.local/bin" ]; then
-      ensure_dir "$SCRIPT_TARGET"
-      echo "[dry-run] cp -a $REPO_DIR/quickshell/r41n/scripts/. $SCRIPT_TARGET/"
+    if [ -d "$REPO_DIR/quickshell/.config/quickshell" ]; then
+      copy_tree "$REPO_DIR/quickshell/.config/quickshell" "$HOME_DIR/.config/quickshell"
+      echo "[dry-run] chmod +x $SCRIPT_TARGET/*/*"
+      echo "[dry-run] rm -rf $HOME_DIR/.config/quickshell/r41n"
       for script_name in "${LEGACY_SCRIPT_NAMES[@]}"; do
         echo "[dry-run] rm -f $HOME_DIR/.local/bin/$script_name"
       done
@@ -238,18 +238,14 @@ install_repo() {
 
     if [ -d "$REPO_DIR/quickshell/.config/quickshell" ]; then
       copy_tree "$REPO_DIR/quickshell/.config/quickshell" "$HOME_DIR/.config/quickshell"
+      chmod +x "$SCRIPT_TARGET"/*/* 2>/dev/null || true
       remove_if_exists "$HOME_DIR/.config/quickshell/power"
+      remove_if_exists "$HOME_DIR/.config/quickshell/r41n"
+      remove_legacy_scripts
     fi
 
     if [ -d "$REPO_DIR/matugen/.config/matugen" ]; then
       copy_tree "$REPO_DIR/matugen/.config/matugen" "$HOME_DIR/.config/matugen"
-    fi
-
-    if [ -d "$REPO_DIR/quickshell/r41n/scripts/.local/bin" ]; then
-      copy_tree "$REPO_DIR/quickshell/r41n/scripts" "$SCRIPT_TARGET"
-      chmod +x "$SCRIPT_TARGET/.local/bin/"* 2>/dev/null || true
-      remove_if_exists "$SCRIPT_TARGET/.local/bin/clipboard-history"
-      remove_legacy_scripts
     fi
 
     if [ -d "$REPO_DIR/assets" ]; then

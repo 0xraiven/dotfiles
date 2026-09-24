@@ -7,7 +7,8 @@ cleanup() {
 }
 trap cleanup EXIT
 
-"${HOME}/.config/quickshell/r41n/scripts/.local/bin/launcher-items" > "$work_dir/apps.json"
+SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
+"$SCRIPT_DIR/launcher-items" > "$work_dir/apps.json"
 
 bash -lc 'compgen -c | sort -u' | \
   jq -Rsc 'split("\n") | map(select(length > 0) | {id: ., name: ., subtitle: "Environment command", kind: "command"}) | .[0:600]' \

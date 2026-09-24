@@ -84,10 +84,10 @@
     },
 
     "custom/power-profile": {
-        "exec": "$HOME/.config/quickshell/r41n/scripts/.local/bin/power-profile-status",
+        "exec": "$HOME/.config/quickshell/scripts/system/power-profile-status",
         "return-type": "json",
         "interval": 5,
-        "on-click": "$HOME/.config/quickshell/r41n/scripts/.local/bin/power-profile-cycle",
+        "on-click": "$HOME/.config/quickshell/scripts/system/power-profile-cycle",
         "on-click-middle": "powerprofilesctl set balanced",
         "on-click-right": "powerprofilesctl set power-saver",
         "on-scroll-up": "powerprofilesctl set performance",

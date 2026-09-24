@@ -90,13 +90,13 @@ PanelWindow {
         else if (item.kind === "app") Quickshell.execDetached(["gtk-launch", item.id])
         else if (item.kind === "file") Quickshell.execDetached(["xdg-open", item.id])
         else if (item.kind === "command") Quickshell.execDetached(["sh", "-lc", item.id])
-        else if (item.kind === "clipboard") Quickshell.execDetached(["sh", "-lc", "$HOME/.config/quickshell/r41n/scripts/.local/bin/clipboard-restore " + item.id])
+        else if (item.kind === "clipboard") Quickshell.execDetached(["sh", "-lc", "$HOME/.config/quickshell/scripts/clipboard/clipboard-restore " + item.id])
         Qt.quit()
     }
 
     Process {
         id: loader
-        command: ["sh", "-lc", "$HOME/.config/quickshell/r41n/scripts/.local/bin/spotlight-items"]
+        command: ["sh", "-lc", "$HOME/.config/quickshell/scripts/launcher/spotlight-items"]
         running: true
         stdout: StdioCollector { id: output }
         onExited: root.loadResults(output.text)
@@ -104,7 +104,7 @@ PanelWindow {
 
     Process {
         id: clipboardLoader
-        command: ["sh", "-lc", "$HOME/.config/quickshell/r41n/scripts/.local/bin/clipboard-items"]
+        command: ["sh", "-lc", "$HOME/.config/quickshell/scripts/clipboard/clipboard-items"]
         stdout: StdioCollector { id: clipboardOutput }
         onExited: root.loadClipboard(clipboardOutput.text)
     }

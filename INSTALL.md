@@ -67,29 +67,34 @@ This repository is the primary source of truth for the current Linux desktop env
 │               ├── hyprland-colors.lua
 │               ├── quickshell-colors.qml
 │               └── waybar-colors.css
-- Matugen also updates the shared Quickshell theme at `~/.config/quickshell/r41n/theme/Colors.qml` and Hyprland theme values at `~/.config/hypr/config/colors.lua`.
+- Matugen also updates Quickshell colors (`launcher/Colors.qml`, `clipboard/Colors.qml`) and Hyprland theme values at `~/.config/hypr/config/colors.lua`.
 ├── quickshell/
 │   └── .config/
 │       └── quickshell/
 │           ├── launcher/
+│           │   ├── Colors.qml
 │           │   └── shell.qml
 │           ├── clipboard/
+│           │   ├── Colors.qml
 │           │   └── shell.qml
-│           └── rice/
-│               └── shell.qml
-│   └── r41n/
-│       └── scripts/
-│           └── .local/
-│               └── bin/
+│           ├── rice/
+│           │   └── shell.qml
+│           └── scripts/
+│               ├── clipboard/
+│               │   ├── clipboard-items
+│               │   ├── clipboard-restore
+│               │   └── clipboard-start
+│               ├── launcher/
+│               │   ├── launcher-items
+│               │   └── spotlight-items
+│               ├── system/
+│               │   ├── power-profile-cycle
+│               │   ├── power-profile-status
+│               │   ├── screenshot
+│               │   └── waybar-start
+│               └── wallpaper/
 │                   ├── apply-palette
-│                   ├── clipboard-items
-│                   ├── clipboard-history
-│                   ├── clipboard-restore
-│                   ├── clipboard-start
-│                   ├── launcher-items
-│                   ├── screenshot
-│                   ├── spotlight-items
-│                   ├── waybar-start
+│                   ├── hyprpaper-start
 │                   ├── wallpaper-next
 │                   └── wallpaper-random
 ├── waybar/
