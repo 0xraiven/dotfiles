@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-WALLPAPER_DIR="${WALLPAPER_DIR:-${HOME}/.config/hypr/wallpapers}"
+WALLPAPER_DIR="${WALLPAPER_DIR:-${HOME}/Pictures/Wallpapers}"
 
 if [ ! -d "$WALLPAPER_DIR" ]; then
   echo "[]"

@@ -7,7 +7,7 @@ if [ -z "$WALLPAPER" ] || [ ! -f "$WALLPAPER" ]; then
   exit 1
 fi
 
-WALLPAPER_DIR="${WALLPAPER_DIR:-${HOME}/.config/hypr/wallpapers}"
+WALLPAPER_DIR="${WALLPAPER_DIR:-${HOME}/Pictures/Wallpapers}"
 STATE_FILE="${XDG_STATE_HOME:-${HOME}/.local/state}/dotfiles/wallpaper-index"
 SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 

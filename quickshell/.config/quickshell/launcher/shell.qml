@@ -23,10 +23,13 @@ PanelWindow {
 
     property var allResults: []
     property var clipboardResults: []
+    property var wallpaperResults: []
     property string activeMode: "search"
     property string calculation: ""
     property bool isClipboardMode: activeMode === "clipboard"
-    property bool resultsVisible: searchInput.text.trim().length > 0 || calculation.length > 0
+    property bool isWallpaperMode: activeMode === "wallpaper"
+    property bool isDualPane: isClipboardMode || isWallpaperMode
+    property bool resultsVisible: searchInput.text.trim().length > 0 || calculation.length > 0 || isDualPane
     property var currentItem: (resultList.currentIndex >= 0 && resultList.currentIndex < resultModel.count) ? resultModel.get(resultList.currentIndex) : null
 
     Colors { id: colors }
@@ -49,15 +52,24 @@ PanelWindow {
         }
     }
 
+    function loadWallpapers(raw) {
+        try {
+            wallpaperResults = JSON.parse(raw)
+            rebuild(searchInput.text)
+        } catch (error) {
+            console.log("spotlight wallpaper parse failed", error)
+        }
+    }
+
     function rebuild(query) {
         const trimmed = query.trim()
         const prefix = trimmed.length > 0 ? trimmed.charAt(0) : ""
-        const normalized = (prefix === ":" || prefix === ">" ? trimmed.slice(1) : trimmed).toLowerCase()
-        const source = prefix === ":" ? clipboardResults : allResults
-        activeMode = prefix === ":" ? "clipboard" : (prefix === ">" ? "commands" : "search")
+        const normalized = (prefix === ":" || prefix === ">" || prefix === "@" ? trimmed.slice(1) : trimmed).toLowerCase()
+        const source = prefix === ":" ? clipboardResults : (prefix === "@" ? wallpaperResults : allResults)
+        activeMode = prefix === ":" ? "clipboard" : (prefix === "@" ? "wallpaper" : (prefix === ">" ? "commands" : "search"))
         resultModel.clear()
 
-        if (prefix !== ":" && prefix !== ">" && trimmed.length > 0) {
+        if (prefix !== ":" && prefix !== ">" && prefix !== "@" && trimmed.length > 0) {
             resultModel.append({ id: "__run__", name: trimmed, subtitle: "Run shell command", kind: "run", isImage: false, preview: "" })
         }
 
@@ -67,14 +79,14 @@ PanelWindow {
             if (normalized === "" || haystack.indexOf(normalized) !== -1) {
                 if (prefix !== ">" || item.kind === "command") {
                     resultModel.append({
-                        id: String(item.id || ""),
+                        id: String(item.id || item.path || ""),
                         name: String(item.name || ""),
-                        subtitle: String(item.subtitle || item.label || ""),
-                        kind: String(item.kind || "app"),
-                        mime: String(item.mime || ""),
+                        subtitle: String(item.subtitle || item.label || (prefix === "@" ? ("Wallpaper • " + (item.filename || "")) : "")),
+                        kind: String(item.kind || (prefix === "@" ? "wallpaper" : "app")),
+                        mime: String(item.mime || (prefix === "@" ? "image/jpeg" : "")),
                         label: String(item.label || item.name || ""),
-                        isImage: Boolean(item.isImage),
-                        preview: String(item.preview || "")
+                        isImage: Boolean(item.isImage || prefix === "@"),
+                        preview: String(item.preview || item.path || "")
                     })
                 }
             }
@@ -85,7 +97,7 @@ PanelWindow {
     }
 
     function updateCalculation(query) {
-        const expression = query.replace(/^[:>]/, "").trim()
+        const expression = query.replace(/^[:>@]/, "").trim()
         if (/^[0-9+*/%().,\- ]+$/.test(expression) && /[0-9]/.test(expression)) {
             calculator.command = ["qalc", "-t", expression]
             calculator.running = true
@@ -103,11 +115,20 @@ PanelWindow {
 
         if (resultList.currentIndex < 0 || resultList.currentIndex >= resultModel.count) return
         const item = resultModel.get(resultList.currentIndex)
+
+        if (item.id === "@" || item.kind === "wallpaper-picker" || item.name === "Wallpaper Picker") {
+            searchInput.text = "@"
+            searchInput.cursorPosition = 1
+            if (!wallpaperLoader.running) wallpaperLoader.running = true
+            return
+        }
+
         if (item.kind === "run") Quickshell.execDetached(["sh", "-lc", item.name])
         else if (item.kind === "app") Quickshell.execDetached(["gtk-launch", item.id])
         else if (item.kind === "file") Quickshell.execDetached(["xdg-open", item.id])
         else if (item.kind === "command") Quickshell.execDetached(["sh", "-lc", item.id])
         else if (item.kind === "clipboard") Quickshell.execDetached(["sh", "-lc", "$HOME/.config/quickshell/scripts/clipboard/clipboard-restore " + item.id])
+        else if (item.kind === "wallpaper") Quickshell.execDetached(["sh", "-lc", "$HOME/.config/quickshell/scripts/wallpaper/apply-wallpaper '" + item.id + "'"])
         Qt.quit()
     }
 
@@ -127,6 +148,13 @@ PanelWindow {
     }
 
     Process {
+        id: wallpaperLoader
+        command: ["sh", "-lc", "$HOME/.config/quickshell/scripts/wallpaper/wallpaper-items"]
+        stdout: StdioCollector { id: wallpaperOutput }
+        onExited: root.loadWallpapers(wallpaperOutput.text)
+    }
+
+    Process {
         id: calculator
         stdout: StdioCollector { id: calculatorOutput }
         onExited: root.calculation = calculatorOutput.text.trim()
@@ -143,10 +171,10 @@ PanelWindow {
     // Spotlight Floating Card
     Rectangle {
         id: spotlight
-        width: root.isClipboardMode ? 780 : 660
+        width: root.isDualPane ? 780 : 660
         height: {
             if (!root.resultsVisible) return 66
-            if (root.isClipboardMode) return 490
+            if (root.isDualPane) return 490
             if (resultModel.count > 0) return Math.min(480, 74 + resultModel.count * 50)
             if (root.calculation.length > 0) return 140
             return 66
@@ -239,7 +267,7 @@ PanelWindow {
                 Text {
                     id: modeText
                     anchors.centerIn: parent
-                    text: root.activeMode === "clipboard" ? "Clipboard" : "Controls"
+                    text: root.activeMode === "clipboard" ? "Clipboard" : (root.activeMode === "wallpaper" ? "Wallpaper" : "Controls")
                     color: colors.primary
                     font.pixelSize: 11
                     font.weight: Font.DemiBold
@@ -266,6 +294,9 @@ PanelWindow {
                     if (text.startsWith(":") && root.activeMode !== "clipboard" && !clipboardLoader.running) {
                         clipboardLoader.running = true
                     }
+                    if (text.startsWith("@") && root.activeMode !== "wallpaper" && !wallpaperLoader.running) {
+                        wallpaperLoader.running = true
+                    }
                     root.rebuild(text)
                 }
 
@@ -282,7 +313,13 @@ PanelWindow {
                 anchors.left: modeBadge.visible ? modeBadge.right : searchIcon.right
                 anchors.leftMargin: 12
                 anchors.verticalCenter: parent.verticalCenter
-                text: root.activeMode === "clipboard" ? "Search clipboard history..." : (root.activeMode === "commands" ? "Search controls & commands..." : "Spotlight Search")
+                text: root.activeMode === "clipboard"
+                    ? "Search clipboard history..."
+                    : (root.activeMode === "wallpaper"
+                        ? "Search wallpapers..."
+                        : (root.activeMode === "commands"
+                            ? "Search controls & commands..."
+                            : "Spotlight Search"))
                 color: colors.muted
                 font.pixelSize: 20
                 font.weight: Font.Normal
@@ -381,7 +418,7 @@ PanelWindow {
                 anchors.topMargin: 8
                 anchors.bottomMargin: 8
                 anchors.leftMargin: 8
-                width: root.isClipboardMode ? 310 : (parent.width - 16)
+                width: root.isDualPane ? 310 : (parent.width - 16)
                 spacing: 2
                 clip: true
                 model: resultModel
@@ -423,7 +460,7 @@ PanelWindow {
 
                         Text {
                             anchors.centerIn: parent
-                            text: model.kind === "run" ? "⚡" : (model.kind === "app" ? "◻" : (model.kind === "file" ? "📄" : (model.kind === "command" ? ">_" : (model.isImage ? "🖼" : "📋"))))
+                            text: model.kind === "run" ? "⚡" : (model.kind === "app" ? "◻" : (model.kind === "file" ? "📄" : (model.kind === "command" ? ">_" : (model.kind === "wallpaper" ? "🖼" : (model.isImage ? "🖼" : "📋")))))
                             color: colors.foreground
                             font.pixelSize: 13
                         }
@@ -440,7 +477,7 @@ PanelWindow {
 
                         Text {
                             width: parent.width
-                            text: model.isImage ? "Image Screenshot" : model.name
+                            text: model.kind === "wallpaper" ? model.name : (model.isImage ? "Image Screenshot" : model.name)
                             color: colors.foreground
                             font.pixelSize: 13
                             font.weight: ListView.isCurrentItem ? Font.DemiBold : Font.Normal
@@ -462,12 +499,12 @@ PanelWindow {
                         anchors.right: parent.right
                         anchors.rightMargin: 10
                         anchors.verticalCenter: parent.verticalCenter
-                        width: root.isClipboardMode ? 16 : actionPill.implicitWidth
+                        width: root.isDualPane ? 16 : actionPill.implicitWidth
                         height: 24
 
-                        // In clipboard mode: show subtle chevron
+                        // In dual-pane mode: show subtle chevron
                         Text {
-                            visible: root.isClipboardMode && ListView.isCurrentItem
+                            visible: root.isDualPane && ListView.isCurrentItem
                             anchors.centerIn: parent
                             text: "›"
                             color: colors.primary
@@ -478,7 +515,7 @@ PanelWindow {
                         // In search mode: show sleek action pill when selected
                         Rectangle {
                             id: actionPill
-                            visible: !root.isClipboardMode && ListView.isCurrentItem
+                            visible: !root.isDualPane && ListView.isCurrentItem
                             anchors.right: parent.right
                             anchors.verticalCenter: parent.verticalCenter
                             height: 22
@@ -491,7 +528,7 @@ PanelWindow {
                             Text {
                                 id: actionPillText
                                 anchors.centerIn: parent
-                                text: model.kind === "run" ? "↩ Run" : (model.kind === "app" ? "↩ Open" : (model.kind === "file" ? "↩ Open" : (model.kind === "command" ? "↩ Run" : "↩ Select")))
+                                text: model.kind === "run" ? "↩ Run" : (model.kind === "app" ? "↩ Open" : (model.kind === "file" ? "↩ Open" : (model.kind === "command" ? "↩ Run" : (model.kind === "wallpaper" ? "↩ Apply" : "↩ Select"))))
                                 color: colors.foreground
                                 font.pixelSize: 10
                                 font.weight: Font.DemiBold
@@ -511,10 +548,10 @@ PanelWindow {
                 }
             }
 
-            // Vertical Divider (ONLY in clipboard mode)
+            // Vertical Divider (ONLY in dual-pane mode)
             Rectangle {
                 id: verticalDivider
-                visible: root.isClipboardMode
+                visible: root.isDualPane
                 anchors.top: parent.top
                 anchors.bottom: parent.bottom
                 anchors.left: resultList.right
@@ -523,10 +560,10 @@ PanelWindow {
                 color: Qt.rgba(colors.outline.r, colors.outline.g, colors.outline.b, 0.20)
             }
 
-            // Right Column: Preview Pane (ONLY in clipboard mode)
+            // Right Column: Preview Pane (in dual-pane mode: clipboard or wallpaper)
             Item {
                 id: previewPane
-                visible: root.isClipboardMode
+                visible: root.isDualPane
                 anchors.top: parent.top
                 anchors.bottom: parent.bottom
                 anchors.left: verticalDivider.right
@@ -537,15 +574,90 @@ PanelWindow {
                 Text {
                     visible: root.currentItem === null
                     anchors.centerIn: parent
-                    text: clipboardLoader.running ? "Loading clipboard..." : "No clipboard items"
+                    text: root.isWallpaperMode
+                        ? (wallpaperLoader.running ? "Loading wallpapers..." : "No wallpapers found")
+                        : (clipboardLoader.running ? "Loading clipboard..." : "No clipboard items")
                     color: colors.muted
                     font.pixelSize: 13
+                }
+
+                // Wallpaper Full Preview Section
+                Item {
+                    id: wallpaperPreviewSection
+                    visible: root.isWallpaperMode && root.currentItem !== null
+                    anchors.fill: parent
+
+                    Column {
+                        anchors.fill: parent
+                        spacing: 12
+
+                        // Wallpaper preview image frame
+                        Rectangle {
+                            width: parent.width
+                            height: parent.height - 72
+                            radius: 12
+                            color: Qt.rgba(colors.background.r, colors.background.g, colors.background.b, 0.60)
+                            border.width: 1
+                            border.color: Qt.rgba(colors.outline.r, colors.outline.g, colors.outline.b, 0.25)
+                            clip: true
+
+                            Image {
+                                id: wallpaperFullImg
+                                anchors.fill: parent
+                                anchors.margins: 4
+                                source: (root.currentItem && root.currentItem.preview) ? root.currentItem.preview : ""
+                                fillMode: Image.PreserveAspectCrop
+                                smooth: true
+                                asynchronous: true
+                                cache: true
+                            }
+                        }
+
+                        // Wallpaper info row & Action hint
+                        Row {
+                            width: parent.width
+                            spacing: 8
+
+                            Rectangle {
+                                height: 22
+                                width: wpPillText.implicitWidth + 12
+                                radius: 5
+                                color: Qt.rgba(colors.primary.r, colors.primary.g, colors.primary.b, 0.25)
+                                border.width: 1
+                                border.color: Qt.rgba(colors.primary.r, colors.primary.g, colors.primary.b, 0.45)
+
+                                Text {
+                                    id: wpPillText
+                                    anchors.centerIn: parent
+                                    text: "Wallpaper"
+                                    color: colors.primary
+                                    font.pixelSize: 10
+                                    font.weight: Font.DemiBold
+                                }
+                            }
+
+                            Text {
+                                text: (root.currentItem && root.currentItem.name) ? root.currentItem.name : ""
+                                color: colors.foreground
+                                font.pixelSize: 12
+                                font.weight: Font.DemiBold
+                                anchors.verticalCenter: parent.verticalCenter
+                                elide: Text.ElideRight
+                            }
+                        }
+
+                        Text {
+                            text: "Press ↩ Return to apply wallpaper & theme"
+                            color: colors.muted
+                            font.pixelSize: 11
+                        }
+                    }
                 }
 
                 // Clipboard Image Preview (Full, unclipped viewport)
                 Item {
                     id: imagePreviewSection
-                    visible: root.currentItem !== null && root.currentItem.isImage
+                    visible: root.isClipboardMode && root.currentItem !== null && root.currentItem.isImage
                     anchors.fill: parent
 
                     Column {
@@ -618,7 +730,7 @@ PanelWindow {
                 // Clipboard Text Preview
                 Item {
                     id: textPreviewSection
-                    visible: root.currentItem !== null && !root.currentItem.isImage
+                    visible: root.isClipboardMode && root.currentItem !== null && !root.currentItem.isImage
                     anchors.fill: parent
 
                     Column {
@@ -675,6 +787,11 @@ PanelWindow {
         if (initialQuery && initialQuery.length > 0) {
             searchInput.text = initialQuery
             searchInput.cursorPosition = initialQuery.length
+            if (initialQuery.startsWith(":")) {
+                clipboardLoader.running = true
+            } else if (initialQuery.startsWith("@")) {
+                wallpaperLoader.running = true
+            }
         }
         searchInput.forceActiveFocus()
     }

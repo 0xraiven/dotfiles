@@ -213,9 +213,9 @@ install_repo() {
     if [ -d "$REPO_DIR/kitty/.config/kitty" ]; then copy_tree "$REPO_DIR/kitty/.config/kitty" "$HOME_DIR/.config/kitty"; fi
     if [ -d "$REPO_DIR/quickshell/.config/quickshell" ]; then
       copy_tree "$REPO_DIR/quickshell/.config/quickshell" "$HOME_DIR/.config/quickshell"
-      echo "[dry-run] chmod +x $SCRIPT_TARGET/*/*"
       echo "[dry-run] rm -rf $HOME_DIR/.config/quickshell/r41n"
       echo "[dry-run] rm -rf $HOME_DIR/.config/quickshell/clipboard"
+      echo "[dry-run] rm -rf $HOME_DIR/.config/quickshell/wallpaper"
       for script_name in "${LEGACY_SCRIPT_NAMES[@]}"; do
         echo "[dry-run] rm -f $HOME_DIR/.local/bin/$script_name"
       done
@@ -243,6 +243,7 @@ install_repo() {
       remove_if_exists "$HOME_DIR/.config/quickshell/power"
       remove_if_exists "$HOME_DIR/.config/quickshell/r41n"
       remove_if_exists "$HOME_DIR/.config/quickshell/clipboard"
+      remove_if_exists "$HOME_DIR/.config/quickshell/wallpaper"
       remove_legacy_scripts
     fi
 
@@ -254,6 +255,26 @@ install_repo() {
       ensure_dir "$HOME_DIR/.local/share"
       rm -rf "$HOME_DIR/.local/share/dotfiles-assets"
       cp -a "$REPO_DIR/assets" "$HOME_DIR/.local/share/dotfiles-assets"
+    fi
+
+    # Ensure Matugen colors match the active desktop wallpaper
+    local current_wp=""
+    local state_file="${XDG_STATE_HOME:-$HOME_DIR/.local/state}/dotfiles/wallpaper-index"
+    local wp_dir="${WALLPAPER_DIR:-$HOME_DIR/Pictures/Wallpapers}"
+    ensure_dir "$wp_dir"
+    if [ -f "$state_file" ] && [ -d "$wp_dir" ]; then
+      local idx=0
+      read -r idx < "$state_file" || idx=0
+      mapfile -t wps < <(find "$wp_dir" -maxdepth 1 -type f \( -iname '*.jpg' -o -iname '*.jpeg' -o -iname '*.png' -o -iname '*.webp' \) | sort)
+      if [ "${#wps[@]}" -gt 0 ]; then
+        current_wp="${wps[$(( idx % ${#wps[@]} ))]}"
+      fi
+    fi
+    if [ -z "$current_wp" ] && [ -d "$wp_dir" ]; then
+      current_wp="$(find "$wp_dir" -maxdepth 1 -type f \( -iname '*.jpg' -o -iname '*.jpeg' -o -iname '*.png' -o -iname '*.webp' \) | sort | head -n 1)"
+    fi
+    if [ -n "$current_wp" ] && [ -f "$current_wp" ] && [ -x "$SCRIPT_TARGET/wallpaper/apply-palette" ]; then
+      "$SCRIPT_TARGET/wallpaper/apply-palette" "$current_wp" >/dev/null 2>&1 || true
     fi
   ); then
     if [ -n "$backup_id" ]; then

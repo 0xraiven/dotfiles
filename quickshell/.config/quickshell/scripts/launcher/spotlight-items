@@ -14,15 +14,15 @@ SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 python3 -c "
 import json, os, glob
 
-wallpapers_dir = os.path.expanduser('~/.config/hypr/wallpapers')
+wallpapers_dir = os.path.expanduser('~/Pictures/Wallpapers')
 wp_scripts = os.path.expanduser('~/.config/quickshell/scripts/wallpaper')
 sys_scripts = os.path.expanduser('~/.config/quickshell/scripts/system')
 
 cmds = [
     {
-        'id': f'{wp_scripts}/wallpaper-picker',
+        'id': '@',
         'name': 'Wallpaper Picker',
-        'subtitle': 'Open wallpaper gallery selector UI',
+        'subtitle': 'Browse and preview wallpapers in Spotlight',
         'kind': 'command'
     },
     {
