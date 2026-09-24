@@ -63,9 +63,13 @@ This repository is the primary source of truth for the current Linux desktop env
 │   └── .config/
 │       └── quickshell/
 │           └── rice/
+│               └── shell.qml
 ├── scripts/
 │   └── .local/
 │       └── bin/
+│           ├── waybar-start
+│           ├── wallpaper-next
+│           └── wallpaper-random
 ├── waybar/
 │   └── .config/
 │       └── waybar/
@@ -96,3 +100,5 @@ The unified installer copies the repo-managed config into the correct XDG paths 
 - This makes it easy to mirror the environment while keeping a clean git history.
 - Generated files, caches, and app runtime state are not tracked unless they are intentionally part of the managed setup.
 - Backups are stored under ~/.dotfiles-backups by default and can be restored with --restore.
+- Quickshell owns wallpaper selection and rotation; hyprpaper remains the renderer.
+- Run wallpaper-next or wallpaper-random manually to change the current wallpaper.

@@ -17,8 +17,8 @@ The repo mirrors the desktop environment using XDG-compatible directories:
 - waybar/.config/waybar/ for bar config and styling
 - fish/.config/fish/ for shell config and functions
 - kitty/.config/kitty/ for terminal config
-- quickshell/.config/quickshell/ for widget shell config
-- scripts/.local/bin/ for helper scripts
+- quickshell/.config/quickshell/ for widget shell config and wallpaper orchestration
+- scripts/.local/bin/ for helper scripts, including idempotent desktop startup helpers
 - assets/ for reusable artwork, icons, cursors, and fonts
 
 ## Workflow

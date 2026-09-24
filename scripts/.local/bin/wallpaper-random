@@ -1,0 +1,29 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+WALLPAPER_DIR="${WALLPAPER_DIR:-${HOME}/.config/hypr/wallpapers}"
+
+mapfile -t wallpapers < <(find "$WALLPAPER_DIR" -maxdepth 1 -type f \( -iname '*.jpg' -o -iname '*.jpeg' -o -iname '*.png' -o -iname '*.webp' \) -print | sort)
+
+if [ "${#wallpapers[@]}" -eq 0 ]; then
+  echo "No wallpapers found in $WALLPAPER_DIR" >&2
+  exit 1
+fi
+
+monitor="$(hyprctl monitors -j | jq -r '.[0].name // empty')"
+if [ -z "$monitor" ]; then
+  echo "No active Hyprland monitor found" >&2
+  exit 1
+fi
+
+wallpaper="${wallpapers[$((RANDOM % ${#wallpapers[@]}))]}"
+
+for _ in {1..20}; do
+  if hyprctl hyprpaper wallpaper "$monitor,$wallpaper" >/dev/null 2>&1; then
+    exit 0
+  fi
+  sleep 0.25
+done
+
+echo "Unable to communicate with hyprpaper" >&2
+exit 1
