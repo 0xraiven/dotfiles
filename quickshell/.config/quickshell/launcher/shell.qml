@@ -2,7 +2,6 @@ import QtQuick
 import Quickshell
 import Quickshell.Io
 import Quickshell.Wayland
-import "../r41n/theme/Colors.qml" as Theme
 
 PanelWindow {
     id: root
@@ -30,7 +29,7 @@ PanelWindow {
     property string calculation: ""
     property bool resultsVisible: searchInput.text.trim().length > 0
 
-    Theme.Colors { id: colors }
+    Colors { id: colors }
 
     function loadResults(raw) {
         try {
@@ -279,7 +278,7 @@ PanelWindow {
                     Text {
                         width: parent.width
                         text: model.kind === "clipboard" && model.isImage ? "BINARY DATA  ·  " + model.mime : model.name
-                        color: Colors.foreground
+                        color: colors.foreground
                         font.pixelSize: 13
                         elide: Text.ElideRight
                     }

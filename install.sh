@@ -247,6 +247,7 @@ install_repo() {
 
     if [ -d "$REPO_DIR/quickshell/r41n/scripts/.local/bin" ]; then
       copy_tree "$REPO_DIR/quickshell/r41n/scripts" "$SCRIPT_TARGET"
+      chmod +x "$SCRIPT_TARGET/.local/bin/"* 2>/dev/null || true
       remove_if_exists "$SCRIPT_TARGET/.local/bin/clipboard-history"
       remove_legacy_scripts
     fi

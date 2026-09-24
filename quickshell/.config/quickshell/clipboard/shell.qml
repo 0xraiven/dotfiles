@@ -2,7 +2,6 @@ import QtQuick
 import Quickshell
 import Quickshell.Io
 import Quickshell.Wayland
-import "../r41n/theme/Colors.qml" as Theme
 
 PanelWindow {
     id: root
@@ -27,7 +26,7 @@ PanelWindow {
 
     property var entries: []
 
-    Theme.Colors { id: colors }
+    Colors { id: colors }
 
     function loadEntries(raw) {
         try {

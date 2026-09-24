@@ -25,3 +25,16 @@ matugen image \
 if command -v pkill >/dev/null 2>&1; then
   pkill --signal USR2 --exact waybar 2>/dev/null || true
 fi
+
+if command -v hyprctl >/dev/null 2>&1; then
+  colors_file="${HOME}/.config/hypr/config/colors.lua"
+  if [ -f "$colors_file" ]; then
+    primary="$(grep -Po 'primary\s*=\s*"\K[^"]*' "$colors_file" 2>/dev/null || true)"
+    surface_variant="$(grep -Po 'surface_variant\s*=\s*"\K[^"]*' "$colors_file" 2>/dev/null || true)"
+    if [ -n "$primary" ] && [ -n "$surface_variant" ]; then
+      active_col="0xff${primary#\#}ff"
+      inactive_col="0xff${surface_variant#\#}ff"
+      hyprctl eval "hl.config({ general = { col = { active_border = '$active_col', inactive_border = '$inactive_col' } } })" >/dev/null 2>&1 || true
+    fi
+  fi
+fi
