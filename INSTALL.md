@@ -67,14 +67,11 @@ This repository is the primary source of truth for the current Linux desktop env
 │               ├── hyprland-colors.lua
 │               ├── quickshell-colors.qml
 │               └── waybar-colors.css
-- Matugen also updates Quickshell colors (`launcher/Colors.qml`, `clipboard/Colors.qml`) and Hyprland theme values at `~/.config/hypr/config/colors.lua`.
+- Matugen also updates Quickshell colors (`launcher/Colors.qml`) and Hyprland theme values at `~/.config/hypr/config/colors.lua`.
 ├── quickshell/
 │   └── .config/
 │       └── quickshell/
 │           ├── launcher/
-│           │   ├── Colors.qml
-│           │   └── shell.qml
-│           ├── clipboard/
 │           │   ├── Colors.qml
 │           │   └── shell.qml
 │           ├── rice/
@@ -136,7 +133,7 @@ The generated `colors.css` is runtime output and is intentionally not stored in 
 - Quickshell owns wallpaper selection and rotation; hyprpaper remains the renderer.
 - Run wallpaper-next or wallpaper-random manually to change the current wallpaper.
 - Matugen generates Waybar colors from every selected wallpaper and refreshes Waybar automatically.
-- Cliphist stores text and image clipboard entries. `Super+V` opens the Quickshell Material-style picker and restores the selected entry.
+- Cliphist stores text and image clipboard entries. `Super+V` opens the launcher in clipboard mode with the preview pane inspector and restores the selected entry on Return.
 - Image entries are labeled as binary data and show a thumbnail directly below the metadata.
 - Print and Shift+Print save screenshots to Pictures and copy them into the image clipboard history.
 - The Super key opens the unified Quickshell Spotlight surface below Waybar with a translucent Material glass panel and fluid entry animation. Plain text searches apps and files; mathematical expressions show Qalc results; `:` searches clipboard history; `>` filters runnable environment commands; any raw query also exposes a Run command action.

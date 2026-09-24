@@ -215,6 +215,7 @@ install_repo() {
       copy_tree "$REPO_DIR/quickshell/.config/quickshell" "$HOME_DIR/.config/quickshell"
       echo "[dry-run] chmod +x $SCRIPT_TARGET/*/*"
       echo "[dry-run] rm -rf $HOME_DIR/.config/quickshell/r41n"
+      echo "[dry-run] rm -rf $HOME_DIR/.config/quickshell/clipboard"
       for script_name in "${LEGACY_SCRIPT_NAMES[@]}"; do
         echo "[dry-run] rm -f $HOME_DIR/.local/bin/$script_name"
       done
@@ -241,6 +242,7 @@ install_repo() {
       chmod +x "$SCRIPT_TARGET"/*/* 2>/dev/null || true
       remove_if_exists "$HOME_DIR/.config/quickshell/power"
       remove_if_exists "$HOME_DIR/.config/quickshell/r41n"
+      remove_if_exists "$HOME_DIR/.config/quickshell/clipboard"
       remove_legacy_scripts
     fi
 

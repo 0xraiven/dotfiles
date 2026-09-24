@@ -6,7 +6,7 @@ hl.bind("SUPER + SUPER_L", hl.dsp.exec_cmd("quickshell --no-duplicate -c launche
 hl.bind("SUPER + E", hl.dsp.exec_cmd(constants.file_manager))
 hl.bind("SUPER + C", hl.dsp.exec_cmd(constants.editor))
 hl.bind("SUPER + A", hl.dsp.exec_cmd(constants.antigravity))
-hl.bind("SUPER + V", hl.dsp.exec_cmd("quickshell --no-duplicate -c clipboard"))
+hl.bind("SUPER + V", hl.dsp.exec_cmd("env LAUNCHER_INITIAL_QUERY=: quickshell --no-duplicate -c launcher"))
 hl.bind("SUPER + Q", hl.dsp.window.close())
 hl.bind("SUPER + SHIFT + Q", hl.dsp.exit())
 hl.bind("SUPER + F", hl.dsp.window.fullscreen())

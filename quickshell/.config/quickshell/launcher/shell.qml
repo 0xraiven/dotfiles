@@ -263,7 +263,7 @@ PanelWindow {
                 clip: true
 
                 onTextChanged: {
-                    if (text.startsWith(":") && root.activeMode !== "clipboard") {
+                    if (text.startsWith(":") && root.activeMode !== "clipboard" && !clipboardLoader.running) {
                         clipboardLoader.running = true
                     }
                     root.rebuild(text)
@@ -533,6 +533,15 @@ PanelWindow {
                 anchors.right: parent.right
                 anchors.margins: 14
 
+                // Empty state or loading placeholder
+                Text {
+                    visible: root.currentItem === null
+                    anchors.centerIn: parent
+                    text: clipboardLoader.running ? "Loading clipboard..." : "No clipboard items"
+                    color: colors.muted
+                    font.pixelSize: 13
+                }
+
                 // Clipboard Image Preview (Full, unclipped viewport)
                 Item {
                     id: imagePreviewSection
@@ -661,5 +670,12 @@ PanelWindow {
         }
     }
 
-    Component.onCompleted: searchInput.forceActiveFocus()
+    Component.onCompleted: {
+        const initialQuery = Quickshell.env("LAUNCHER_INITIAL_QUERY")
+        if (initialQuery && initialQuery.length > 0) {
+            searchInput.text = initialQuery
+            searchInput.cursorPosition = initialQuery.length
+        }
+        searchInput.forceActiveFocus()
+    }
 }
