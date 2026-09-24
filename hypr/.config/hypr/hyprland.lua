@@ -1,12 +1,16 @@
-require("config.monitors")
-require("config.look_and_feel")
-require("config.environment")
+local modules = {
+    "config.monitors",
+    "config.look_and_feel",
+    "config.environment",
+    "input.gestures",
+    "bindings.apps",
+    "bindings.navigation",
+    "bindings.utilities",
+    "rules.windows",
+    "services.autostart",
+}
 
-require("input.gestures")
-
-require("bindings.apps")
-require("bindings.navigation")
-require("bindings.utilities")
-
-require("rules.windows")
-require("services.autostart")
+for _, mod in ipairs(modules) do
+    package.loaded[mod] = nil
+    pcall(require, mod)
+end

@@ -8,15 +8,10 @@ if pgrep -x hyprpaper >/dev/null 2>&1; then
   exit 0
 fi
 
+# Apply initial wallpaper once hyprpaper is ready (wallpaper-next has built-in retry)
 (
-  # Wait for hyprpaper to initialize and set the initial wallpaper
-  for _ in {1..40}; do
-    if hyprctl hyprpaper listloaded >/dev/null 2>&1 || [ -S "${XDG_RUNTIME_DIR:-/tmp}/hypr/${HYPRLAND_INSTANCE_SIGNATURE:-}/.hyprpaper.sock" ]; then
-      "$SCRIPT_DIR/wallpaper-next" >/dev/null 2>&1 || true
-      break
-    fi
-    sleep 0.1
-  done
+  sleep 0.5
+  "$SCRIPT_DIR/wallpaper-next" >/dev/null 2>&1 || true
 ) &
 
 exec flock --nonblock "$LOCK_FILE" hyprpaper "$@"

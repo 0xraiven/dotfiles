@@ -1,5 +1,7 @@
-hl.gesture({
-    fingers = 3,
-    direction = "horizontal",
-    action = "workspace",
-})
+pcall(function()
+    hl.gesture({
+        fingers = 3,
+        direction = "horizontal",
+        action = "workspace",
+    })
+end)
