@@ -29,14 +29,13 @@ PanelWindow {
     property string calculation: ""
     property bool isClipboardMode: activeMode === "clipboard"
     property bool isWallpaperMode: activeMode === "wallpaper"
-    property bool isDualPane: isClipboardMode || isWallpaperMode
-    property bool resultsVisible: searchInput.text.trim().length > 0 || calculation.length > 0 || isDualPane || activeMode === "apps" || activeMode === "files"
+    property bool isDualPane: isClipboardMode
+    property bool resultsVisible: searchInput.text.trim().length > 0 || calculation.length > 0 || isDualPane || isWallpaperMode || activeMode === "apps" || activeMode === "files"
     property var currentItem: (resultList.currentIndex >= 0 && resultList.currentIndex < resultModel.count) ? resultModel.get(resultList.currentIndex) : null
     property bool iconsSeparated: false
 
     Colors { id: colors }
 
-    // Tahoe 1-second separation timer
     Timer {
         id: separationTimer
         interval: 1000
@@ -123,8 +122,10 @@ PanelWindow {
 
         if (prefix === ":") {
             activeMode = "clipboard"
+            if (!clipboardLoader.running && clipboardResults.length === 0) clipboardLoader.running = true
         } else if (prefix === "@") {
             activeMode = "wallpaper"
+            if (!wallpaperLoader.running && wallpaperResults.length === 0) wallpaperLoader.running = true
         } else if (prefix === ">") {
             activeMode = "commands"
         } else if (activeMode === "clipboard" || activeMode === "wallpaper" || activeMode === "commands") {
@@ -244,6 +245,7 @@ PanelWindow {
     Process {
         id: wallpaperLoader
         command: ["sh", "-lc", "$HOME/.config/quickshell/scripts/wallpaper/wallpaper-items"]
+        running: true
         stdout: StdioCollector { id: wallpaperOutput }
         onExited: root.loadWallpapers(wallpaperOutput.text)
     }
@@ -359,8 +361,34 @@ PanelWindow {
                     Keys.onEscapePressed: root.closeAndQuit()
                     Keys.onReturnPressed: root.runCurrent()
                     Keys.onEnterPressed: root.runCurrent()
-                    Keys.onDownPressed: resultList.incrementCurrentIndex()
-                    Keys.onUpPressed: resultList.decrementCurrentIndex()
+                    Keys.onDownPressed: {
+                        if (root.isWallpaperMode) {
+                            var nextIdx = resultList.currentIndex + 2
+                            if (nextIdx < resultModel.count) resultList.currentIndex = nextIdx
+                            else resultList.currentIndex = resultModel.count - 1
+                        } else {
+                            resultList.incrementCurrentIndex()
+                        }
+                    }
+                    Keys.onUpPressed: {
+                        if (root.isWallpaperMode) {
+                            var prevIdx = resultList.currentIndex - 2
+                            if (prevIdx >= 0) resultList.currentIndex = prevIdx
+                            else resultList.currentIndex = 0
+                        } else {
+                            resultList.decrementCurrentIndex()
+                        }
+                    }
+                    Keys.onRightPressed: {
+                        if (root.isWallpaperMode && resultList.currentIndex + 1 < resultModel.count) {
+                            resultList.incrementCurrentIndex()
+                        }
+                    }
+                    Keys.onLeftPressed: {
+                        if (root.isWallpaperMode && resultList.currentIndex > 0) {
+                            resultList.decrementCurrentIndex()
+                        }
+                    }
                 }
 
                 // Placeholder Text
@@ -430,11 +458,9 @@ PanelWindow {
                 }
             }
 
-            // Redesigned macOS Tahoe Fluid Droplet Spring Animation
             ParallelAnimation {
                 id: fluidSeparationAnim
 
-                // 1. Search Capsule fluid glide with organic easing
                 NumberAnimation {
                     target: searchPill
                     property: "x"
@@ -697,6 +723,7 @@ PanelWindow {
             anchors.right: parent.right
             height: {
                 if (!root.resultsVisible) return 0
+                if (root.isWallpaperMode) return 510
                 if (root.isDualPane) return 490
                 if (resultModel.count > 0) return Math.min(480, 16 + resultModel.count * 52)
                 if (root.calculation.length > 0) return 120
@@ -769,7 +796,7 @@ PanelWindow {
             // Main Content Area
             Item {
                 id: contentArea
-                visible: root.resultsVisible && resultModel.count > 0
+                visible: root.resultsVisible && resultModel.count > 0 && !root.isWallpaperMode
                 anchors.fill: parent
                 anchors.margins: 8
 
@@ -1156,6 +1183,476 @@ PanelWindow {
                                 text: "Press ↩ Return to restore to clipboard"
                                 color: colors.muted
                                 font.pixelSize: 11
+                            }
+                        }
+                    }
+                }
+            }
+
+            // ==========================================
+            // Creative Wallpaper Studio (Immersive Gallery)
+            // ==========================================
+            Item {
+                id: wallpaperStudioPane
+                visible: root.resultsVisible && resultModel.count > 0 && root.isWallpaperMode
+                anchors.fill: parent
+                anchors.margins: 12
+
+                // Ambient dynamic backdrop glow
+                Image {
+                    anchors.fill: parent
+                    source: (root.currentItem && root.currentItem.preview) ? ("file://" + root.currentItem.preview) : ""
+                    fillMode: Image.PreserveAspectCrop
+                    opacity: 0.12
+                    smooth: true
+                    cache: true
+                    asynchronous: true
+                }
+
+                Rectangle {
+                    anchors.fill: parent
+                    color: Qt.rgba(colors.surface.r, colors.surface.g, colors.surface.b, 0.40)
+                    radius: 12
+                }
+
+                // Left: Hero Showcase Frame (420px wide)
+                Item {
+                    id: heroShowcase
+                    anchors.top: parent.top
+                    anchors.bottom: parent.bottom
+                    anchors.left: parent.left
+                    width: 420
+
+                    Rectangle {
+                        anchors.fill: parent
+                        radius: 14
+                        color: Qt.rgba(colors.background.r, colors.background.g, colors.background.b, 0.70)
+                        border.width: 1
+                        border.color: Qt.rgba(colors.primary.r, colors.primary.g, colors.primary.b, 0.35)
+                        clip: true
+
+                        Image {
+                            id: heroImage
+                            anchors.fill: parent
+                            source: (root.currentItem && root.currentItem.preview) ? ("file://" + root.currentItem.preview) : ""
+                            fillMode: Image.PreserveAspectCrop
+                            smooth: true
+                            asynchronous: true
+                            cache: true
+                        }
+
+                        // Top & Bottom gradient vignettes for text readability
+                        Rectangle {
+                            anchors.top: parent.top
+                            anchors.left: parent.left
+                            anchors.right: parent.right
+                            height: 64
+                            gradient: Gradient {
+                                GradientStop { position: 0.0; color: Qt.rgba(0, 0, 0, 0.60) }
+                                GradientStop { position: 1.0; color: "transparent" }
+                            }
+                        }
+
+                        Rectangle {
+                            anchors.bottom: parent.bottom
+                            anchors.left: parent.left
+                            anchors.right: parent.right
+                            height: 80
+                            gradient: Gradient {
+                                GradientStop { position: 0.0; color: "transparent" }
+                                GradientStop { position: 1.0; color: Qt.rgba(0, 0, 0, 0.85) }
+                            }
+                        }
+
+                        // Top Floating Header Row
+                        Item {
+                            anchors.top: parent.top
+                            anchors.left: parent.left
+                            anchors.right: parent.right
+                            anchors.margins: 10
+                            height: 28
+
+                            Rectangle {
+                                anchors.left: parent.left
+                                anchors.verticalCenter: parent.verticalCenter
+                                height: 26
+                                width: heroTitleRow.implicitWidth + 18
+                                radius: 13
+                                color: Qt.rgba(colors.surface.r, colors.surface.g, colors.surface.b, 0.85)
+                                border.width: 1
+                                border.color: Qt.rgba(colors.outline.r, colors.outline.g, colors.outline.b, 0.30)
+
+                                Row {
+                                    id: heroTitleRow
+                                    anchors.centerIn: parent
+                                    spacing: 6
+
+                                    Text {
+                                        text: "󰧾"
+                                        color: colors.primary
+                                        font.family: "JetBrainsMono Nerd Font"
+                                        font.pixelSize: 12
+                                        anchors.verticalCenter: parent.verticalCenter
+                                    }
+
+                                    Text {
+                                        text: (root.currentItem && root.currentItem.name) ? root.currentItem.name : ""
+                                        color: colors.foreground
+                                        font.pixelSize: 12
+                                        font.weight: Font.DemiBold
+                                        anchors.verticalCenter: parent.verticalCenter
+                                        elide: Text.ElideRight
+                                    }
+                                }
+                            }
+
+                            // Shuffle / Random button
+                            Rectangle {
+                                anchors.right: parent.right
+                                anchors.verticalCenter: parent.verticalCenter
+                                height: 26
+                                width: randomBtnRow.implicitWidth + 16
+                                radius: 13
+                                color: randomMouse.containsMouse
+                                    ? Qt.rgba(colors.surfaceVariant.r, colors.surfaceVariant.g, colors.surfaceVariant.b, 0.90)
+                                    : Qt.rgba(colors.surface.r, colors.surface.g, colors.surface.b, 0.78)
+                                border.width: 1
+                                border.color: Qt.rgba(colors.outline.r, colors.outline.g, colors.outline.b, 0.30)
+
+                                Behavior on color { ColorAnimation { duration: 120 } }
+
+                                Row {
+                                    id: randomBtnRow
+                                    anchors.centerIn: parent
+                                    spacing: 5
+
+                                    Text {
+                                        text: ""
+                                        font.family: "JetBrainsMono Nerd Font"
+                                        font.pixelSize: 11
+                                        color: colors.primary
+                                        anchors.verticalCenter: parent.verticalCenter
+                                    }
+
+                                    Text {
+                                        text: "Random"
+                                        color: colors.foreground
+                                        font.pixelSize: 11
+                                        font.weight: Font.Medium
+                                        anchors.verticalCenter: parent.verticalCenter
+                                    }
+                                }
+
+                                MouseArea {
+                                    id: randomMouse
+                                    anchors.fill: parent
+                                    hoverEnabled: true
+                                    cursorShape: Qt.PointingHandCursor
+                                    onClicked: {
+                                        if (resultModel.count > 1) {
+                                            var next = Math.floor(Math.random() * resultModel.count)
+                                            if (next === resultList.currentIndex) next = (next + 1) % resultModel.count
+                                            resultList.currentIndex = next
+                                        }
+                                    }
+                                }
+                            }
+                        }
+
+                        // Bottom Floating Glass Action Card
+                        Rectangle {
+                            anchors.left: parent.left
+                            anchors.right: parent.right
+                            anchors.bottom: parent.bottom
+                            anchors.margins: 10
+                            height: 48
+                            radius: 12
+                            color: Qt.rgba(colors.surface.r, colors.surface.g, colors.surface.b, 0.88)
+                            border.width: 1
+                            border.color: Qt.rgba(colors.outline.r, colors.outline.g, colors.outline.b, 0.28)
+
+                            Row {
+                                anchors.left: parent.left
+                                anchors.leftMargin: 12
+                                anchors.verticalCenter: parent.verticalCenter
+                                spacing: 8
+
+                                Text {
+                                    text: (root.currentItem && root.currentItem.subtitle) ? root.currentItem.subtitle.replace(/^Wallpaper • /, "") : ""
+                                    color: colors.muted
+                                    font.pixelSize: 11
+                                    font.weight: Font.Normal
+                                    elide: Text.ElideRight
+                                }
+
+                                Rectangle {
+                                    width: 1; height: 12
+                                    color: Qt.rgba(colors.outline.r, colors.outline.g, colors.outline.b, 0.35)
+                                    anchors.verticalCenter: parent.verticalCenter
+                                }
+
+                                Text {
+                                    text: (resultList.currentIndex + 1) + "/" + resultModel.count
+                                    color: colors.muted
+                                    font.pixelSize: 11
+                                    anchors.verticalCenter: parent.verticalCenter
+                                }
+                            }
+
+                            // Interactive Apply Theme Button
+                            Rectangle {
+                                id: applyBtn
+                                anchors.right: parent.right
+                                anchors.rightMargin: 6
+                                anchors.verticalCenter: parent.verticalCenter
+                                height: 34
+                                width: applyRow.implicitWidth + 20
+                                radius: 8
+                                color: applyMouse.containsMouse
+                                    ? Qt.rgba(colors.primary.r, colors.primary.g, colors.primary.b, 0.95)
+                                    : Qt.rgba(colors.primary.r, colors.primary.g, colors.primary.b, 0.80)
+
+                                Behavior on color { ColorAnimation { duration: 120 } }
+
+                                Row {
+                                    id: applyRow
+                                    anchors.centerIn: parent
+                                    spacing: 6
+
+                                    Text {
+                                        text: "󰄬"
+                                        color: colors.on_primary
+                                        font.family: "JetBrainsMono Nerd Font"
+                                        font.pixelSize: 13
+                                        anchors.verticalCenter: parent.verticalCenter
+                                    }
+
+                                    Text {
+                                        text: "Apply Theme"
+                                        color: colors.on_primary
+                                        font.pixelSize: 12
+                                        font.weight: Font.DemiBold
+                                        anchors.verticalCenter: parent.verticalCenter
+                                    }
+
+                                    Rectangle {
+                                        width: returnKeyText.implicitWidth + 8
+                                        height: 18
+                                        radius: 4
+                                        color: Qt.rgba(0, 0, 0, 0.20)
+                                        anchors.verticalCenter: parent.verticalCenter
+
+                                        Text {
+                                            id: returnKeyText
+                                            anchors.centerIn: parent
+                                            text: "↩"
+                                            color: colors.on_primary
+                                            font.pixelSize: 10
+                                        }
+                                    }
+                                }
+
+                                MouseArea {
+                                    id: applyMouse
+                                    anchors.fill: parent
+                                    hoverEnabled: true
+                                    cursorShape: Qt.PointingHandCursor
+                                    onClicked: root.runCurrent()
+                                }
+                            }
+                        }
+
+                        // Click anywhere on hero applies
+                        MouseArea {
+                            anchors.fill: parent
+                            z: -1
+                            onClicked: root.runCurrent()
+                        }
+                    }
+                }
+
+                // Right: 2-Column Gallery Deck (314px wide)
+                Item {
+                    id: galleryDeck
+                    anchors.top: parent.top
+                    anchors.bottom: parent.bottom
+                    anchors.left: heroShowcase.right
+                    anchors.leftMargin: 12
+                    anchors.right: parent.right
+
+                    // Gallery Header
+                    Item {
+                        id: galleryHeader
+                        anchors.top: parent.top
+                        anchors.left: parent.left
+                        anchors.right: parent.right
+                        height: 20
+
+                        Row {
+                            anchors.left: parent.left
+                            anchors.verticalCenter: parent.verticalCenter
+                            spacing: 6
+
+                            Text {
+                                text: "GALLERY"
+                                font.pixelSize: 10
+                                font.weight: Font.Bold
+                                font.letterSpacing: 1.2
+                                color: colors.muted
+                            }
+
+                            Rectangle {
+                                width: countText.implicitWidth + 8
+                                height: 16
+                                radius: 4
+                                color: Qt.rgba(colors.surfaceVariant.r, colors.surfaceVariant.g, colors.surfaceVariant.b, 0.50)
+
+                                Text {
+                                    id: countText
+                                    anchors.centerIn: parent
+                                    text: String(resultModel.count)
+                                    color: colors.muted
+                                    font.pixelSize: 10
+                                    font.weight: Font.Medium
+                                }
+                            }
+                        }
+
+                        Text {
+                            anchors.right: parent.right
+                            anchors.verticalCenter: parent.verticalCenter
+                            text: "↑↓←→ browse"
+                            font.pixelSize: 10
+                            color: colors.muted
+                        }
+                    }
+
+                    // 2-Column Visual Card Grid
+                    GridView {
+                        id: wallpaperGrid
+                        anchors.top: galleryHeader.bottom
+                        anchors.topMargin: 8
+                        anchors.left: parent.left
+                        anchors.right: parent.right
+                        anchors.bottom: parent.bottom
+                        cellWidth: Math.floor(width / 2)
+                        cellHeight: Math.floor((cellWidth - 8) * 0.60) + 24
+                        clip: true
+                        boundsBehavior: Flickable.StopAtBounds
+                        model: resultModel
+                        currentIndex: resultList.currentIndex
+
+                        onCurrentIndexChanged: {
+                            if (resultList.currentIndex !== currentIndex) {
+                                resultList.currentIndex = currentIndex
+                            }
+                            positionViewAtIndex(currentIndex, GridView.Contain)
+                        }
+
+                        Connections {
+                            target: resultList
+                            function onCurrentIndexChanged() {
+                                if (wallpaperGrid.currentIndex !== resultList.currentIndex) {
+                                    wallpaperGrid.currentIndex = resultList.currentIndex
+                                }
+                                wallpaperGrid.positionViewAtIndex(resultList.currentIndex, GridView.Contain)
+                            }
+                        }
+
+                        delegate: Item {
+                            width: wallpaperGrid.cellWidth
+                            height: wallpaperGrid.cellHeight
+
+                            Rectangle {
+                                id: cardRect
+                                anchors.fill: parent
+                                anchors.margins: 4
+                                radius: 10
+                                clip: true
+                                color: Qt.rgba(colors.surfaceVariant.r, colors.surfaceVariant.g, colors.surfaceVariant.b, 0.40)
+                                border.width: (GridView.isCurrentItem || cardMouse.containsMouse) ? 2 : 1
+                                border.color: GridView.isCurrentItem
+                                    ? colors.primary
+                                    : (cardMouse.containsMouse
+                                        ? Qt.rgba(colors.primary.r, colors.primary.g, colors.primary.b, 0.50)
+                                        : Qt.rgba(colors.outline.r, colors.outline.g, colors.outline.b, 0.25))
+
+                                scale: cardMouse.containsMouse ? 1.03 : (GridView.isCurrentItem ? 1.02 : 1.0)
+                                Behavior on scale { NumberAnimation { duration: 120 } }
+                                Behavior on border.color { ColorAnimation { duration: 120 } }
+
+                                Image {
+                                    anchors.fill: parent
+                                    source: model.preview ? ("file://" + model.preview) : ""
+                                    fillMode: Image.PreserveAspectCrop
+                                    smooth: true
+                                    asynchronous: true
+                                    cache: true
+                                    sourceSize.width: 180
+                                    sourceSize.height: 110
+                                }
+
+                                // Dark vignette at bottom of thumbnail
+                                Rectangle {
+                                    anchors.left: parent.left
+                                    anchors.right: parent.right
+                                    anchors.bottom: parent.bottom
+                                    height: 24
+                                    gradient: Gradient {
+                                        GradientStop { position: 0.0; color: "transparent" }
+                                        GradientStop { position: 1.0; color: Qt.rgba(0, 0, 0, 0.85) }
+                                    }
+                                }
+
+                                Text {
+                                    anchors.left: parent.left
+                                    anchors.leftMargin: 8
+                                    anchors.right: checkPill.visible ? checkPill.left : parent.right
+                                    anchors.rightMargin: 6
+                                    anchors.bottom: parent.bottom
+                                    anchors.bottomMargin: 4
+                                    text: model.name
+                                    color: Qt.rgba(1, 1, 1, 0.95)
+                                    font.pixelSize: 11
+                                    font.weight: GridView.isCurrentItem ? Font.DemiBold : Font.Normal
+                                    elide: Text.ElideRight
+                                }
+
+                                Rectangle {
+                                    id: checkPill
+                                    visible: GridView.isCurrentItem
+                                    anchors.right: parent.right
+                                    anchors.rightMargin: 6
+                                    anchors.bottom: parent.bottom
+                                    anchors.bottomMargin: 4
+                                    width: 16
+                                    height: 16
+                                    radius: 8
+                                    color: colors.primary
+
+                                    Text {
+                                        anchors.centerIn: parent
+                                        text: "✓"
+                                        color: colors.on_primary
+                                        font.pixelSize: 9
+                                        font.weight: Font.Bold
+                                    }
+                                }
+
+                                MouseArea {
+                                    id: cardMouse
+                                    anchors.fill: parent
+                                    hoverEnabled: true
+                                    cursorShape: Qt.PointingHandCursor
+                                    onClicked: {
+                                        resultList.currentIndex = index
+                                        wallpaperGrid.currentIndex = index
+                                    }
+                                    onDoubleClicked: {
+                                        resultList.currentIndex = index
+                                        root.runCurrent()
+                                    }
+                                }
                             }
                         }
                     }
