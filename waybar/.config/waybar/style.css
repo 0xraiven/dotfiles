@@ -7,29 +7,27 @@
     min-height: 0;
     padding: 0;
     margin: 0;
+    border-radius: 0;
 }
 
 window#waybar {
-    background: transparent;
+    background-color: alpha(@background, 0.94);
     color: @foreground;
+    border-bottom: 1px solid alpha(@surface_variant, 0.6);
 }
 
 .modules-left,
 .modules-center,
 .modules-right {
-    background: alpha(@surface, 0.88);
-    border: 1px solid alpha(@surface_variant, 0.6);
-    border-radius: 9999px;
-    padding: 2px 8px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
+    background: transparent;
+    border: none;
+    border-radius: 0;
+    padding: 0;
+    box-shadow: none;
 }
 
 .modules-left {
-    padding-left: 4px;
-}
-
-.modules-center {
-    padding: 2px 14px;
+    padding-left: 6px;
 }
 
 .modules-right {
@@ -38,42 +36,50 @@ window#waybar {
 
 /* Workspaces */
 #workspaces {
-    padding: 0;
+    padding: 0 4px;
 }
 
 #workspaces button {
-    color: @muted;
+    color: @foreground;
     background: transparent;
     border: none;
-    border-radius: 9999px;
-    padding: 2px 8px;
-    margin: 0 1px;
-    font-weight: bold;
-    transition: all 0.2s ease;
+    border-radius: 2px;
+    padding: 0 7px;
+    margin: 3px 1px;
+    font-size: 11px;
+    font-weight: 600;
+    transition: all 0.15s ease-in-out;
+}
+
+#workspaces button.empty {
+    color: alpha(@muted, 0.4);
 }
 
 #workspaces button.active {
     color: @on_primary;
     background: @primary;
-    padding: 2px 10px;
+    border-radius: 2px;
 }
 
 #workspaces button:hover {
-    background: alpha(@surface_variant, 0.7);
+    background: alpha(@surface_variant, 0.6);
     color: @foreground;
 }
 
 /* Window Title */
 #window {
-    color: @muted;
-    padding-left: 8px;
+    color: alpha(@foreground, 0.6);
+    padding: 0 10px;
     font-size: 11px;
+    border-left: 1px solid alpha(@surface_variant, 0.4);
+    margin: 4px 0 4px 6px;
 }
 
 /* Clock */
 #clock {
     color: @foreground;
-    font-weight: bold;
+    font-weight: 600;
+    padding: 0 10px;
 }
 
 /* Base module chips */
@@ -84,9 +90,10 @@ window#waybar {
 #cpu,
 #memory,
 #custom-power-profile {
-    padding: 2px 7px;
-    border-radius: 9999px;
-    transition: all 0.2s ease;
+    padding: 0 8px;
+    margin: 2px 1px;
+    border-radius: 2px;
+    transition: background 0.15s ease;
 }
 
 #pulseaudio:hover,
@@ -139,42 +146,42 @@ window#waybar {
 
 /* Native Drawer & Interactive Sliders */
 .drawer-child {
-    padding: 0 4px;
+    padding: 0 2px;
 }
 
 #pulseaudio-slider,
 #backlight-slider {
-    min-width: 75px;
-    padding: 0 6px;
+    min-width: 70px;
+    padding: 0 4px;
 }
 
 #pulseaudio-slider trough,
 #backlight-slider trough {
-    min-height: 4px;
-    min-width: 75px;
-    border-radius: 9999px;
+    min-height: 3px;
+    min-width: 70px;
+    border-radius: 1px;
     background-color: alpha(@surface_variant, 0.7);
 }
 
 #pulseaudio-slider highlight,
 #backlight-slider highlight {
-    min-height: 4px;
-    border-radius: 9999px;
+    min-height: 3px;
+    border-radius: 1px;
     background-color: @primary;
 }
 
 #pulseaudio-slider slider,
 #backlight-slider slider {
-    min-height: 10px;
-    min-width: 10px;
-    border-radius: 50%;
+    min-height: 8px;
+    min-width: 8px;
+    border-radius: 1px;
     background-color: @foreground;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
 }
 
 /* Tray */
 #tray {
     padding: 0 6px;
+    margin: 2px 2px;
 }
 
 #tray > .passive {

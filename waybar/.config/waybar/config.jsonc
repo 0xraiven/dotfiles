@@ -1,11 +1,8 @@
 {
     "layer": "top",
     "position": "top",
-    "height": 32,
-    "margin-top": 5,
-    "margin-left": 8,
-    "margin-right": 8,
-    "spacing": 4,
+    "height": 30,
+    "spacing": 0,
 
     "modules-left": [
         "hyprland/workspaces",
@@ -28,12 +25,15 @@
         "format": "{name}",
         "on-click": "activate",
         "sort-by-number": true,
-        "all-outputs": false
+        "all-outputs": false,
+        "persistent-workspaces": {
+            "*": [1, 2, 3, 4, 5, 6, 7, 8, 9]
+        }
     },
 
     "hyprland/window": {
         "format": "{}",
-        "max-length": 35,
+        "max-length": 40,
         "separate-outputs": true
     },
 
@@ -45,7 +45,7 @@
     "group/audio": {
         "orientation": "inherit",
         "drawer": {
-            "transition-duration": 300,
+            "transition-duration": 250,
             "children-class": "drawer-child",
             "transition-left-to-right": false
         },
@@ -75,7 +75,7 @@
     "group/backlight": {
         "orientation": "inherit",
         "drawer": {
-            "transition-duration": 300,
+            "transition-duration": 250,
             "children-class": "drawer-child",
             "transition-left-to-right": false
         },
@@ -100,7 +100,7 @@
     "group/power": {
         "orientation": "inherit",
         "drawer": {
-            "transition-duration": 300,
+            "transition-duration": 250,
             "children-class": "drawer-child",
             "transition-left-to-right": false
         },
@@ -128,7 +128,7 @@
     "group/network": {
         "orientation": "inherit",
         "drawer": {
-            "transition-duration": 300,
+            "transition-duration": 250,
             "children-class": "drawer-child",
             "transition-left-to-right": false
         },
