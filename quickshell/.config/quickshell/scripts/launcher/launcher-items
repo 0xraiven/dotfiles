@@ -1,25 +1,117 @@
-#!/usr/bin/env bash
-set -euo pipefail
+#!/usr/bin/env python3
+import json
+import os
+import sys
 
-app_dirs=(
-  "/usr/share/applications"
-  "${HOME}/.local/share/applications"
-)
+def get_app_dirs():
+    dirs = []
+    # User local applications take precedence
+    user_app_dir = os.path.expanduser("~/.local/share/applications")
+    if os.path.isdir(user_app_dir):
+        dirs.append(user_app_dir)
 
-for directory in "${app_dirs[@]}"; do
-  [ -d "$directory" ] || continue
-  find "$directory" -maxdepth 1 -type f -name '*.desktop' -print
- done | sort -u | while IFS= read -r desktop_file; do
-  type="$(awk -F= '$1 == "Type" { print substr($0, index($0, "=") + 1); exit }' "$desktop_file")"
-  no_display="$(awk -F= '$1 == "NoDisplay" { print substr($0, index($0, "=") + 1); exit }' "$desktop_file")"
-  hidden="$(awk -F= '$1 == "Hidden" { print substr($0, index($0, "=") + 1); exit }' "$desktop_file")"
-  name="$(awk -F= '$1 == "Name" { print substr($0, index($0, "=") + 1); exit }' "$desktop_file")"
-  id="$(basename "$desktop_file" .desktop)"
+    # XDG data dirs
+    xdg_data = os.environ.get("XDG_DATA_DIRS", "/usr/local/share:/usr/share")
+    for base in xdg_data.split(":"):
+        if not base:
+            continue
+        app_dir = os.path.join(base, "applications")
+        if os.path.isdir(app_dir) and app_dir not in dirs:
+            dirs.append(app_dir)
 
-  [ "$type" = "Application" ] || continue
-  [ "$no_display" = "true" ] && continue
-  [ "$hidden" = "true" ] && continue
-  [ -n "$name" ] || continue
+    # Flatpak system applications
+    flatpak_dir = "/var/lib/flatpak/exports/share/applications"
+    if os.path.isdir(flatpak_dir) and flatpak_dir not in dirs:
+        dirs.append(flatpak_dir)
 
-  jq -cn --arg id "$id" --arg name "$name" '{id: $id, name: $name}'
-done | jq -s 'sort_by(.name | ascii_downcase)'
+    return dirs
+
+def main():
+    dirs = get_app_dirs()
+    seen_ids = set()
+    apps = []
+
+    for directory in dirs:
+        if not os.path.isdir(directory):
+            continue
+        try:
+            entries = os.listdir(directory)
+        except OSError:
+            continue
+
+        for fname in entries:
+            if not fname.endswith(".desktop"):
+                continue
+            app_id = fname[:-8]
+            if app_id in seen_ids:
+                continue
+
+            filepath = os.path.join(directory, fname)
+            in_entry = False
+            name = None
+            icon = ""
+            app_type = None
+            no_display = False
+            hidden = False
+
+            try:
+                with open(filepath, "r", encoding="utf-8", errors="ignore") as f:
+                    for line in f:
+                        line = line.strip()
+                        if not line or line.startswith("#"):
+                            continue
+                        if line.startswith("[") and line.endswith("]"):
+                            if line == "[Desktop Entry]":
+                                in_entry = True
+                            else:
+                                in_entry = False
+                                if name and app_type:
+                                    break
+                            continue
+
+                        if not in_entry or "=" not in line:
+                            continue
+
+                        key, _, value = line.partition("=")
+                        key = key.strip()
+                        value = value.strip().strip('"').strip("'")
+
+                        if key == "Type":
+                            app_type = value
+                        elif key == "Name" and name is None:
+                            name = value
+                        elif key == "Icon" and not icon:
+                            icon = value
+                        elif key == "NoDisplay":
+                            no_display = (value.lower() == "true")
+                        elif key == "Hidden":
+                            hidden = (value.lower() == "true")
+            except Exception:
+                continue
+
+            if app_type == "Application" and not no_display and not hidden and name:
+                seen_ids.add(app_id)
+
+                # Robust icon resolution for paths that may not exist on disk
+                if icon.startswith("/") and not os.path.exists(icon):
+                    base_name = os.path.splitext(os.path.basename(icon))[0]
+                    if base_name in ("studio", "android-studio") or "studio" in app_id:
+                        icon = "android-studio"
+                    else:
+                        icon = base_name
+
+                # If no icon was specified in desktop entry, fallback to app_id
+                if not icon:
+                    icon = app_id
+
+                apps.append({
+                    "id": app_id,
+                    "name": name,
+                    "icon": icon
+                })
+
+    apps.sort(key=lambda item: item["name"].lower())
+    json.dump(apps, sys.stdout)
+
+if __name__ == "__main__":
+    main()
