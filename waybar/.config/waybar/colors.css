@@ -1,0 +1,11 @@
+/* Default / fallback color variables; automatically updated by matugen on wallpaper changes. */
+@define-color background #191114;
+@define-color surface #251d21;
+@define-color surface_variant #504348;
+@define-color foreground #eedfe3;
+@define-color muted #d4c2c8;
+@define-color primary #fdb0d4;
+@define-color on_primary #521d3b;
+@define-color secondary #e0bdcb;
+@define-color tertiary #f2bb9a;
+@define-color error #ffb4ab;

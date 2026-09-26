@@ -2,8 +2,11 @@
 
 * {
     font-family: "JetBrainsMono Nerd Font", "Noto Sans", sans-serif;
-    font-size: 13px;
+    font-size: 12px;
+    font-weight: 500;
     min-height: 0;
+    padding: 0;
+    margin: 0;
 }
 
 window#waybar {
@@ -14,63 +17,84 @@ window#waybar {
 .modules-left,
 .modules-center,
 .modules-right {
-    background: alpha(@surface, 0.92);
-    border: 1px solid alpha(@surface_variant, 0.8);
-    border-radius: 12px;
-    margin-top: 6px;
+    background: alpha(@surface, 0.88);
+    border: 1px solid alpha(@surface_variant, 0.6);
+    border-radius: 9999px;
+    padding: 2px 8px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
 }
 
 .modules-left {
-    margin-left: 10px;
-    padding: 3px 8px;
+    padding-left: 4px;
 }
 
 .modules-center {
-    padding: 3px 14px;
+    padding: 2px 14px;
 }
 
 .modules-right {
-    margin-right: 10px;
-    padding: 3px 8px;
+    padding-right: 6px;
+}
+
+/* Workspaces */
+#workspaces {
+    padding: 0;
 }
 
 #workspaces button {
     color: @muted;
     background: transparent;
     border: none;
-    border-radius: 8px;
-    padding: 2px 9px;
-    margin: 0 2px;
+    border-radius: 9999px;
+    padding: 2px 8px;
+    margin: 0 1px;
+    font-weight: bold;
+    transition: all 0.2s ease;
 }
 
 #workspaces button.active {
     color: @on_primary;
     background: @primary;
+    padding: 2px 10px;
 }
 
 #workspaces button:hover {
-    background: @surface_variant;
+    background: alpha(@surface_variant, 0.7);
     color: @foreground;
 }
 
+/* Window Title */
 #window {
     color: @muted;
-    margin-left: 10px;
+    padding-left: 8px;
+    font-size: 11px;
 }
 
+/* Clock */
 #clock {
     color: @foreground;
     font-weight: bold;
 }
 
-#network,
+/* Base module chips */
 #pulseaudio,
 #backlight,
 #battery,
+#network,
 #cpu,
 #memory,
-#tray {
-    padding: 0 7px;
+#custom-power-profile {
+    padding: 2px 7px;
+    border-radius: 9999px;
+    transition: all 0.2s ease;
+}
+
+#pulseaudio:hover,
+#backlight:hover,
+#battery:hover,
+#network:hover,
+#custom-power-profile:hover {
+    background: alpha(@surface_variant, 0.5);
 }
 
 #network {
@@ -85,9 +109,20 @@ window#waybar {
     color: @tertiary;
 }
 
+#battery {
+    color: @primary;
+}
+
+#cpu {
+    color: @error;
+}
+
+#memory {
+    color: @secondary;
+}
+
 #custom-power-profile {
     color: @primary;
-    padding: 0 9px;
 }
 
 #custom-power-profile.power-saver {
@@ -102,18 +137,50 @@ window#waybar {
     color: @error;
 }
 
-#battery {
-    color: @primary;
+/* Native Drawer & Interactive Sliders */
+.drawer-child {
+    padding: 0 4px;
 }
 
-#cpu {
-    color: @error;
+#pulseaudio-slider,
+#backlight-slider {
+    min-width: 75px;
+    padding: 0 6px;
 }
 
-#memory {
-    color: @secondary;
+#pulseaudio-slider trough,
+#backlight-slider trough {
+    min-height: 4px;
+    min-width: 75px;
+    border-radius: 9999px;
+    background-color: alpha(@surface_variant, 0.7);
 }
 
+#pulseaudio-slider highlight,
+#backlight-slider highlight {
+    min-height: 4px;
+    border-radius: 9999px;
+    background-color: @primary;
+}
+
+#pulseaudio-slider slider,
+#backlight-slider slider {
+    min-height: 10px;
+    min-width: 10px;
+    border-radius: 50%;
+    background-color: @foreground;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
+}
+
+/* Tray */
 #tray {
-    padding-right: 4px;
+    padding: 0 6px;
+}
+
+#tray > .passive {
+    -gtk-icon-effect: dim;
+}
+
+#tray > .needs-attention {
+    -gtk-icon-effect: highlight;
 }
