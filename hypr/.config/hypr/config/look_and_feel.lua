@@ -56,6 +56,15 @@ hl.config({
         enable_hyprcursor = true,
     },
 
+    gestures = {
+        workspace_swipe_distance = 300,
+        workspace_swipe_cancel_ratio = 0.2,
+        workspace_swipe_min_speed_to_force = 10,
+        workspace_swipe_create_new = true,
+        workspace_swipe_forever = true,
+        workspace_swipe_direction_lock = true,
+    },
+
     misc = {
         disable_hyprland_logo = true,
         disable_splash_rendering = true,

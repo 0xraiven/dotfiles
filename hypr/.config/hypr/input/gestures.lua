@@ -1,4 +1,5 @@
 -- Touchpad gestures
--- Note: 3-finger horizontal workspace switching is built into Hyprland by default.
--- Custom non-conflicting gestures can be registered below:
--- e.g. hl.gesture({ fingers = 4, direction = "vertical", action = "workspace" })
+-- Register horizontal workspace swipe (both 3-finger and 4-finger supported)
+pcall(hl.gesture, { fingers = 3, direction = "horizontal", action = "workspace" })
+pcall(hl.gesture, { fingers = 4, direction = "horizontal", action = "workspace" })
+pcall(hl.gesture, { fingers = 3, direction = "vertical", action = "special" })
