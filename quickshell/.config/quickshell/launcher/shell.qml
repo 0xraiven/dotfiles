@@ -106,15 +106,31 @@ PanelWindow {
         }
     }
 
+    function closeAndQuit() {
+        root.visible = false
+        Qt.quit()
+    }
+
     function runCurrent() {
         if (root.calculation.length > 0 && (resultList.currentIndex < 0 || searchInput.text.trim() === root.calculation)) {
-            Quickshell.execDetached(["sh", "-lc", "printf '%s' '" + root.calculation.replace(/'/g, "'\\''") + "' | wl-copy"])
-            Qt.quit()
+            try {
+                Quickshell.execDetached(["sh", "-lc", "printf '%s' '" + root.calculation.replace(/'/g, "'\\''") + "' | wl-copy"])
+            } catch (e) {
+                console.log("copy failed", e)
+            }
+            closeAndQuit()
             return
         }
 
-        if (resultList.currentIndex < 0 || resultList.currentIndex >= resultModel.count) return
+        if (resultList.currentIndex < 0 || resultList.currentIndex >= resultModel.count) {
+            closeAndQuit()
+            return
+        }
         const item = resultModel.get(resultList.currentIndex)
+        if (!item) {
+            closeAndQuit()
+            return
+        }
 
         if (item.id === "@" || item.kind === "wallpaper-picker" || item.name === "Wallpaper Picker") {
             searchInput.text = "@"
@@ -123,13 +139,17 @@ PanelWindow {
             return
         }
 
-        if (item.kind === "run") Quickshell.execDetached(["sh", "-lc", item.name])
-        else if (item.kind === "app") Quickshell.execDetached(["gtk-launch", item.id])
-        else if (item.kind === "file") Quickshell.execDetached(["xdg-open", item.id])
-        else if (item.kind === "command") Quickshell.execDetached(["sh", "-lc", item.id])
-        else if (item.kind === "clipboard") Quickshell.execDetached(["sh", "-lc", "$HOME/.config/quickshell/scripts/clipboard/clipboard-restore " + item.id])
-        else if (item.kind === "wallpaper") Quickshell.execDetached(["sh", "-lc", "$HOME/.config/quickshell/scripts/wallpaper/apply-wallpaper '" + item.id + "'"])
-        Qt.quit()
+        try {
+            if (item.kind === "run") Quickshell.execDetached(["sh", "-lc", item.name])
+            else if (item.kind === "app") Quickshell.execDetached(["gtk-launch", item.id])
+            else if (item.kind === "file") Quickshell.execDetached(["xdg-open", item.id])
+            else if (item.kind === "command") Quickshell.execDetached(["sh", "-lc", item.id])
+            else if (item.kind === "clipboard") Quickshell.execDetached(["sh", "-lc", "$HOME/.config/quickshell/scripts/clipboard/clipboard-restore " + item.id])
+            else if (item.kind === "wallpaper") Quickshell.execDetached(["sh", "-lc", "$HOME/.config/quickshell/scripts/wallpaper/apply-wallpaper '" + item.id + "'"])
+        } catch (e) {
+            console.log("execDetached failed", e)
+        }
+        closeAndQuit()
     }
 
     Process {
@@ -165,7 +185,7 @@ PanelWindow {
     // Fullscreen scrim: click outside to dismiss
     MouseArea {
         anchors.fill: parent
-        onClicked: Qt.quit()
+        onClicked: root.closeAndQuit()
     }
 
     // Spotlight Floating Card
@@ -300,7 +320,7 @@ PanelWindow {
                     root.rebuild(text)
                 }
 
-                Keys.onEscapePressed: Qt.quit()
+                Keys.onEscapePressed: root.closeAndQuit()
                 Keys.onReturnPressed: root.runCurrent()
                 Keys.onEnterPressed: root.runCurrent()
                 Keys.onDownPressed: resultList.incrementCurrentIndex()
